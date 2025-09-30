@@ -89,9 +89,15 @@ export async function POST(request: NextRequest) {
     const { username, server, rank, playstyle, availability, description, tags, inGameName } = await request.json();
 
     // Validation
-    if (!username || !server || !rank || !playstyle || !availability) {
+    const missing: string[] = [];
+    if (!username) missing.push('username');
+    if (!server) missing.push('server');
+    if (!rank) missing.push('rank');
+    if (!playstyle || !Array.isArray(playstyle) || playstyle.length === 0) missing.push('playstyle');
+    if (!availability) missing.push('availability');
+    if (missing.length) {
       return NextResponse.json(
-        { success: false, error: 'Required fields missing' },
+        { success: false, error: `Required fields missing: ${missing.join(', ')}` },
         { status: 400 }
       );
     }
@@ -101,10 +107,10 @@ export async function POST(request: NextRequest) {
       username,
       server,
       rank,
-      playstyle,
+      playstyle: Array.isArray(playstyle) ? playstyle : [],
       availability,
       description: description || '',
-      tags: tags || [],
+      tags: Array.isArray(tags) ? tags : [],
       inGameName: inGameName || '',
     });
 
@@ -116,8 +122,15 @@ export async function POST(request: NextRequest) {
       success: true,
       data: lfgRequest,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create LFG request error:', error);
+    if (error?.name === 'ValidationError') {
+      const details = Object.values(error.errors || {}).map((e: any) => e.message);
+      return NextResponse.json(
+        { success: false, error: 'Validation failed', details },
+        { status: 400 }
+      );
+    }
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

@@ -99,10 +99,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Validation
-    if (!size || !server || !rank || !mode || !code) {
-      console.log('Missing fields:', { size, server, rank, mode, code });
+    const missing: string[] = [];
+    if (!size) missing.push('size');
+    if (!server) missing.push('server');
+    if (!rank) missing.push('rank');
+    if (!mode) missing.push('mode');
+    if (!code) missing.push('code');
+    if (missing.length) {
       return NextResponse.json(
-        { success: false, error: 'Required fields missing' },
+        { success: false, error: `Required fields missing: ${missing.join(', ')}` },
         { status: 400 }
       );
     }
@@ -124,11 +129,11 @@ export async function POST(request: NextRequest) {
       mode,
       code,
       description: description || '',
-      tags: tags || [],
+      tags: Array.isArray(tags) ? tags : [],
       inGameName: inGameName || '',
-      preferredRoles: preferredRoles || [],
-      preferredAgents: preferredAgents || [],
-      lookingForRoles: lookingForRoles || [],
+      preferredRoles: Array.isArray(preferredRoles) ? preferredRoles : [],
+      preferredAgents: Array.isArray(preferredAgents) ? preferredAgents : [],
+      lookingForRoles: Array.isArray(lookingForRoles) ? lookingForRoles : [],
     });
 
     await party.save();
@@ -139,8 +144,15 @@ export async function POST(request: NextRequest) {
       success: true,
       data: party,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create party error:', error);
+    if (error?.name === 'ValidationError') {
+      const details = Object.values(error.errors || {}).map((e: any) => e.message);
+      return NextResponse.json(
+        { success: false, error: 'Validation failed', details },
+        { status: 400 }
+      );
+    }
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

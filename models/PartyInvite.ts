@@ -89,14 +89,15 @@ const PartyInviteSchema = new Schema<IPartyInvite>({
         maxlength: 500,
       },
       inGameName: {
-        type: String,
-        required: true,
-        trim: true,
+    type: String,
+    required: false,
+    trim: true,
       },
-      tags: [{
-        type: String,
-        enum: ['18+', 'Mic Required', 'Chill', 'Competitive', 'Learning', 'Fun', 'Serious', 'Beginner Friendly', 'Microphone Required', 'Headset Required', 'Discord Required', 'English Speaking', 'No Toxicity', 'Competitive Mindset', 'Team Communication'],
-      }],
+  // Relax tag validation to avoid 500s when UI sends new labels (e.g., "18+ Only", "Microphone Required")
+  tags: [{
+    type: String,
+    trim: true,
+  }],
   expiresAt: {
     type: Date,
     default: () => new Date(Date.now() + 30 * 60 * 1000), // 30 minutes from now

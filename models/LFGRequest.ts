@@ -73,7 +73,8 @@ const LFGRequestSchema = new Schema<ILFGRequest>({
   },
   playstyle: [{
     type: String,
-    enum: ['Duelist', 'Initiator', 'Controller', 'Sentinel', 'Flexible'],
+    // Relax enum because UI sends values like Entry, Support, IGL, Fragger, Flex
+    trim: true,
   }],
   availability: {
     type: String,
@@ -85,11 +86,11 @@ const LFGRequestSchema = new Schema<ILFGRequest>({
   },
   tags: [{
     type: String,
-    enum: ['18+', 'Mic Required', 'Chill', 'Competitive', 'Learning', 'Fun', 'Serious', 'Beginner Friendly'],
+    trim: true,
   }],
   inGameName: {
     type: String,
-    required: true,
+    required: false,
     trim: true,
   },
   expiresAt: {
