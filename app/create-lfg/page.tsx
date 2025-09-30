@@ -34,6 +34,7 @@ type CreateLFGForm = z.infer<typeof createLFGSchema>;
 export default function CreateLFGPage() {
   const [loading, setLoading] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [currentStep, setCurrentStep] = useState(1);
   const router = useRouter();
 
   const {
@@ -133,9 +134,38 @@ export default function CreateLFGPage() {
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Create LFG Request
           </h1>
-          <p className="text-valorant-light/80 text-lg max-w-2xl mx-auto">
+          <p className="text-valorant-light/80 text-lg max-w-2xl mx-auto mb-8">
             Let other players know you're looking for a group. Share your playstyle, availability, and preferences.
           </p>
+          
+          {/* Step Indicator */}
+          <div className="flex justify-center mb-8">
+            <div className="flex items-center space-x-4">
+              {[1, 2, 3].map((step) => (
+                <div key={step} className="flex items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                    currentStep >= step 
+                      ? 'bg-valorant-blue text-white' 
+                      : 'bg-valorant-dark border border-valorant-light/30 text-valorant-light/60'
+                  }`}>
+                    {step}
+                  </div>
+                  {step < 3 && (
+                    <div className={`w-8 h-0.5 mx-2 ${
+                      currentStep > step ? 'bg-valorant-blue' : 'bg-valorant-light/30'
+                    }`} />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="text-sm text-valorant-light/60">
+            Step {currentStep} of 3: {
+              currentStep === 1 ? 'Player Information' :
+              currentStep === 2 ? 'Game Preferences' : 'Final Details'
+            }
+          </div>
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-8">

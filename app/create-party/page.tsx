@@ -36,6 +36,7 @@ type CreatePartyForm = z.infer<typeof createPartySchema>;
 export default function CreatePartyPage() {
   const [loading, setLoading] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [currentStep, setCurrentStep] = useState(1);
   const router = useRouter();
 
   const {
@@ -138,9 +139,38 @@ export default function CreatePartyPage() {
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Create Party Invitation
           </h1>
-          <p className="text-valorant-light/80 text-lg max-w-2xl mx-auto">
+          <p className="text-valorant-light/80 text-lg max-w-2xl mx-auto mb-8">
             Share your party code and find teammates to join your Valorant game.
           </p>
+          
+          {/* Step Indicator */}
+          <div className="flex justify-center mb-8">
+            <div className="flex items-center space-x-4">
+              {[1, 2, 3].map((step) => (
+                <div key={step} className="flex items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                    currentStep >= step 
+                      ? 'bg-valorant-red text-white' 
+                      : 'bg-valorant-dark border border-valorant-light/30 text-valorant-light/60'
+                  }`}>
+                    {step}
+                  </div>
+                  {step < 3 && (
+                    <div className={`w-8 h-0.5 mx-2 ${
+                      currentStep > step ? 'bg-valorant-red' : 'bg-valorant-light/30'
+                    }`} />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="text-sm text-valorant-light/60">
+            Step {currentStep} of 3: {
+              currentStep === 1 ? 'Basic Information' :
+              currentStep === 2 ? 'Game Details' : 'Final Details'
+            }
+          </div>
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -153,211 +183,278 @@ export default function CreatePartyPage() {
           >
             <div className="card">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                {/* Party Size */}
-                <div>
-                  <label className="block text-sm font-medium text-valorant-light mb-3">
-                    <Users className="w-4 h-4 inline mr-2" />
-                    Party Size
-                  </label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {['Solo', 'Duo', 'Trio', 'FourStack'].map((size) => (
-                      <label
-                        key={size}
-                        className={`card cursor-pointer transition-all duration-200 ${
-                          watchedSize === size 
-                            ? 'border-valorant-red bg-valorant-red/10' 
-                            : 'hover:border-valorant-red/50'
-                        }`}
-                      >
-                        <input
-                          {...register('size')}
-                          type="radio"
-                          value={size}
-                          className="sr-only"
-                        />
-                        <div className="text-center">
-                          <div className="text-2xl mb-2">
-                            {size === 'Solo' && '👤'}
-                            {size === 'Duo' && '👥'}
-                            {size === 'Trio' && '👨‍👩‍👧'}
-                            {size === 'FourStack' && '👨‍👩‍👧‍👦'}
-                          </div>
-                          <div className="text-sm font-medium text-white">{size}</div>
-                        </div>
+                {/* Step 1: Basic Information */}
+                {currentStep === 1 && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="space-y-6"
+                  >
+                    <div className="text-center mb-6">
+                      <h3 className="text-xl font-semibold text-white mb-2">Basic Information</h3>
+                      <p className="text-valorant-light/60">Tell us about your party setup</p>
+                    </div>
+
+                    {/* Party Size */}
+                    <div>
+                      <label className="block text-sm font-medium text-valorant-light mb-3">
+                        <Users className="w-4 h-4 inline mr-2" />
+                        Party Size
                       </label>
-                    ))}
-                  </div>
-                  {errors.size && (
-                    <p className="mt-2 text-sm text-red-400">{errors.size.message}</p>
-                  )}
-                </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {['Solo', 'Duo', 'Trio', 'FourStack'].map((size) => (
+                          <label
+                            key={size}
+                            className={`card cursor-pointer transition-all duration-200 ${
+                              watchedSize === size 
+                                ? 'border-valorant-red bg-valorant-red/10' 
+                                : 'hover:border-valorant-red/50'
+                            }`}
+                          >
+                            <input
+                              {...register('size')}
+                              type="radio"
+                              value={size}
+                              className="sr-only"
+                            />
+                            <div className="text-center">
+                              <div className="text-2xl mb-2">
+                                {size === 'Solo' && '👤'}
+                                {size === 'Duo' && '👥'}
+                                {size === 'Trio' && '👨‍👩‍👧'}
+                                {size === 'FourStack' && '👨‍👩‍👧‍👦'}
+                              </div>
+                              <div className="text-sm font-medium text-white">{size}</div>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                      {errors.size && (
+                        <p className="mt-2 text-sm text-red-400">{errors.size.message}</p>
+                      )}
+                    </div>
 
-                {/* Region */}
-                <div>
-                  <label className="block text-sm font-medium text-valorant-light mb-3">
-                    <MapPin className="w-4 h-4 inline mr-2" />
-                    Region
-                  </label>
-                  <select
-                    {...register('region')}
-                    className="input-field"
-                  >
-                    <option value="">Select Region</option>
-                    {['NA', 'EU', 'AP', 'BR', 'KR', 'LATAM'].map((region) => (
-                      <option key={region} value={region}>
-                        {region}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.region && (
-                    <p className="mt-2 text-sm text-red-400">{errors.region.message}</p>
-                  )}
-                </div>
+                    {/* Region */}
+                    <div>
+                      <label className="block text-sm font-medium text-valorant-light mb-3">
+                        <MapPin className="w-4 h-4 inline mr-2" />
+                        Region
+                      </label>
+                      <select
+                        {...register('region')}
+                        className="input-field"
+                      >
+                        <option value="">Select Region</option>
+                        {['NA', 'EU', 'AP', 'BR', 'KR', 'LATAM'].map((region) => (
+                          <option key={region} value={region}>
+                            {region}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.region && (
+                        <p className="mt-2 text-sm text-red-400">{errors.region.message}</p>
+                      )}
+                    </div>
 
-                {/* Rank */}
-                <div>
-                  <label className="block text-sm font-medium text-valorant-light mb-3">
-                    <Trophy className="w-4 h-4 inline mr-2" />
-                    Rank
-                  </label>
-                  <select
-                    {...register('rank')}
-                    className="input-field"
-                  >
-                    <option value="">Select Rank</option>
-                    {['Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Immortal', 'Radiant'].map((rank) => (
-                      <option key={rank} value={rank}>
-                        {rank}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.rank && (
-                    <p className="mt-2 text-sm text-red-400">{errors.rank.message}</p>
-                  )}
-                </div>
+                    {/* Rank */}
+                    <div>
+                      <label className="block text-sm font-medium text-valorant-light mb-3">
+                        <Trophy className="w-4 h-4 inline mr-2" />
+                        Rank
+                      </label>
+                      <select
+                        {...register('rank')}
+                        className="input-field"
+                      >
+                        <option value="">Select Rank</option>
+                        {['Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Immortal', 'Radiant'].map((rank) => (
+                          <option key={rank} value={rank}>
+                            {rank}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.rank && (
+                        <p className="mt-2 text-sm text-red-400">{errors.rank.message}</p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
 
-                {/* Mode */}
-                <div>
-                  <label className="block text-sm font-medium text-valorant-light mb-3">
-                    <Gamepad2 className="w-4 h-4 inline mr-2" />
-                    Game Mode
-                  </label>
-                  <select
-                    {...register('mode')}
-                    className="input-field"
+                {/* Step 2: Game Details */}
+                {currentStep === 2 && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="space-y-6"
                   >
-                    <option value="">Select Mode</option>
-                    {['Ranked', 'Unrated', 'Spike Rush', 'Deathmatch', 'Escalation', 'Replication'].map((mode) => (
-                      <option key={mode} value={mode}>
-                        {mode}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.mode && (
-                    <p className="mt-2 text-sm text-red-400">{errors.mode.message}</p>
-                  )}
-                  
-                  {/* Ranked Mode Warning */}
-                  {isRankedRestricted(watchedSize, watchedMode) && (
-                    <div className="mt-3 p-3 bg-yellow-600/20 border border-yellow-500/30 rounded-lg">
-                      <div className="flex items-start space-x-2">
-                        <AlertTriangle className="w-5 h-5 text-yellow-400 mt-0.5" />
-                        <div className="text-sm text-yellow-200">
-                          <p className="font-medium">Ranked Mode Restriction</p>
-                          <p>4-stack parties are not allowed in Ranked mode. Consider using a different party size or game mode.</p>
+                    <div className="text-center mb-6">
+                      <h3 className="text-xl font-semibold text-white mb-2">Game Details</h3>
+                      <p className="text-valorant-light/60">Choose your game mode and party code</p>
+                    </div>
+
+                    {/* Mode */}
+                    <div>
+                      <label className="block text-sm font-medium text-valorant-light mb-3">
+                        <Gamepad2 className="w-4 h-4 inline mr-2" />
+                        Game Mode
+                      </label>
+                      <select
+                        {...register('mode')}
+                        className="input-field"
+                      >
+                        <option value="">Select Mode</option>
+                        {['Ranked', 'Unrated', 'Spike Rush', 'Deathmatch', 'Escalation', 'Replication'].map((mode) => (
+                          <option key={mode} value={mode}>
+                            {mode}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.mode && (
+                        <p className="mt-2 text-sm text-red-400">{errors.mode.message}</p>
+                      )}
+                      
+                      {/* Ranked Mode Warning */}
+                      {isRankedRestricted(watchedSize, watchedMode) && (
+                        <div className="mt-3 p-3 bg-yellow-600/20 border border-yellow-500/30 rounded-lg">
+                          <div className="flex items-start space-x-2">
+                            <AlertTriangle className="w-5 h-5 text-yellow-400 mt-0.5" />
+                            <div className="text-sm text-yellow-200">
+                              <p className="font-medium">Ranked Mode Restriction</p>
+                              <p>4-stack parties are not allowed in Ranked mode. Consider using a different party size or game mode.</p>
+                            </div>
+                          </div>
                         </div>
+                      )}
+                    </div>
+
+                    {/* Party Code */}
+                    <div>
+                      <label className="block text-sm font-medium text-valorant-light mb-3">
+                        <Hash className="w-4 h-4 inline mr-2" />
+                        Party Code
+                      </label>
+                      <div className="flex space-x-3">
+                        <input
+                          {...register('code')}
+                          type="text"
+                          placeholder="ABC-DEF-GHI"
+                          className="input-field flex-1"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setValue('code', generateRandomCode())}
+                          className="btn-secondary"
+                        >
+                          Generate
+                        </button>
+                      </div>
+                      {errors.code && (
+                        <p className="mt-2 text-sm text-red-400">{errors.code.message}</p>
+                      )}
+                      <p className="mt-2 text-xs text-valorant-light/60">
+                        Get your party code from the Valorant client (Social → Party → Invite Code)
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 3: Final Details */}
+                {currentStep === 3 && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="space-y-6"
+                  >
+                    <div className="text-center mb-6">
+                      <h3 className="text-xl font-semibold text-white mb-2">Final Details</h3>
+                      <p className="text-valorant-light/60">Add description and tags to attract the right players</p>
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <label className="block text-sm font-medium text-valorant-light mb-3">
+                        <MessageSquare className="w-4 h-4 inline mr-2" />
+                        Description (Optional)
+                      </label>
+                      <textarea
+                        {...register('description')}
+                        rows={3}
+                        placeholder="Tell players what you're looking for..."
+                        className="input-field"
+                      />
+                      {errors.description && (
+                        <p className="mt-2 text-sm text-red-400">{errors.description.message}</p>
+                      )}
+                    </div>
+
+                    {/* Tags */}
+                    <div>
+                      <label className="block text-sm font-medium text-valorant-light mb-3">
+                        <Tag className="w-4 h-4 inline mr-2" />
+                        Tags (Optional)
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {availableTags.map((tag) => (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => handleTagToggle(tag)}
+                            className={`badge transition-all duration-200 ${
+                              selectedTags.includes(tag)
+                                ? 'badge-primary'
+                                : 'badge-secondary'
+                            }`}
+                          >
+                            {tag}
+                          </button>
+                        ))}
                       </div>
                     </div>
-                  )}
-                </div>
+                  </motion.div>
+                )}
 
-                {/* Party Code */}
-                <div>
-                  <label className="block text-sm font-medium text-valorant-light mb-3">
-                    <Hash className="w-4 h-4 inline mr-2" />
-                    Party Code
-                  </label>
-                  <div className="flex space-x-3">
-                    <input
-                      {...register('code')}
-                      type="text"
-                      placeholder="ABC-DEF-GHI"
-                      className="input-field flex-1"
-                    />
+                {/* Navigation Buttons */}
+                <div className="flex justify-between pt-6 border-t border-valorant-light/10">
+                  {currentStep > 1 && (
                     <button
                       type="button"
-                      onClick={() => setValue('code', generateRandomCode())}
-                      className="btn-secondary"
+                      onClick={() => setCurrentStep(currentStep - 1)}
+                      className="btn-outline"
                     >
-                      Generate
+                      Previous
                     </button>
-                  </div>
-                  {errors.code && (
-                    <p className="mt-2 text-sm text-red-400">{errors.code.message}</p>
                   )}
-                  <p className="mt-2 text-xs text-valorant-light/60">
-                    Get your party code from the Valorant client (Social → Party → Invite Code)
-                  </p>
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-medium text-valorant-light mb-3">
-                    <MessageSquare className="w-4 h-4 inline mr-2" />
-                    Description (Optional)
-                  </label>
-                  <textarea
-                    {...register('description')}
-                    rows={3}
-                    placeholder="Tell players what you're looking for..."
-                    className="input-field"
-                  />
-                  {errors.description && (
-                    <p className="mt-2 text-sm text-red-400">{errors.description.message}</p>
-                  )}
-                </div>
-
-                {/* Tags */}
-                <div>
-                  <label className="block text-sm font-medium text-valorant-light mb-3">
-                    <Tag className="w-4 h-4 inline mr-2" />
-                    Tags (Optional)
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {availableTags.map((tag) => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => handleTagToggle(tag)}
-                        className={`badge transition-all duration-200 ${
-                          selectedTags.includes(tag)
-                            ? 'badge-primary'
-                            : 'badge-secondary'
-                        }`}
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full btn-primary flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label={loading ? "Creating party..." : "Create party"}
-                >
-                  {loading ? (
-                    <div className="spinner" />
+                  
+                  <div className="flex-1" />
+                  
+                  {currentStep < 3 ? (
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(currentStep + 1)}
+                      className="btn-primary"
+                    >
+                      Next Step
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </button>
                   ) : (
-                    <>
-                      <Plus className="w-5 h-5" />
-                      <span>Create Party</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="btn-primary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label={loading ? "Creating party..." : "Create party"}
+                    >
+                      {loading ? (
+                        <div className="spinner" />
+                      ) : (
+                        <>
+                          <Plus className="w-5 h-5" />
+                          <span>Create Party</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
                   )}
-                </button>
+                </div>
               </form>
             </div>
           </motion.div>
