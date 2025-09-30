@@ -15,7 +15,10 @@ import {
   ArrowRight,
   Play,
   Target,
-  Trophy
+  Trophy,
+  Filter,
+  X,
+  ChevronDown
 } from 'lucide-react';
 import PartyCard from '@/components/PartyCard';
 import LFGCard from '@/components/LFGCard';
@@ -25,6 +28,8 @@ export default function HomePage() {
   const [recentParties, setRecentParties] = useState<PartyInvite[]>([]);
   const [recentLFG, setRecentLFG] = useState<LFGRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'parties' | 'lfg'>('all');
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetchRecentPosts();
@@ -160,13 +165,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Live Feeds Section */}
+      {/* Live Feeds Section - Compact Design */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            className="text-center mb-16"
+            className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Live Community Activity
@@ -176,91 +181,156 @@ export default function HomePage() {
             </p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-2 gap-8">
-            {/* Recent Parties */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              className="space-y-6"
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-bold text-white flex items-center">
-                  <Users className="w-6 h-6 mr-2 text-valorant-red" />
-                  Recent Parties
-                </h3>
-                <Link
-                  href="/parties"
-                  className="text-valorant-red hover:text-red-400 transition-colors flex items-center"
+          {/* Filter Controls */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {/* Filter Tabs */}
+              <div className="flex bg-valorant-dark/50 rounded-lg p-1">
+                <button
+                  onClick={() => setActiveFilter('all')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    activeFilter === 'all'
+                      ? 'bg-valorant-red text-white'
+                      : 'text-valorant-light/60 hover:text-white'
+                  }`}
                 >
-                  View All
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </Link>
-              </div>
-
-              <div className="space-y-4">
-                {loading ? (
-                  <div className="space-y-4">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="card animate-pulse">
-                        <div className="h-4 bg-gray-600 rounded w-3/4 mb-2"></div>
-                        <div className="h-3 bg-gray-600 rounded w-1/2"></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : recentParties.length > 0 ? (
-                  recentParties.map((party) => (
-                    <PartyCard key={party._id} party={party} />
-                  ))
-                ) : (
-                  <div className="card text-center py-8">
-                    <p className="text-valorant-light/60">No recent parties found</p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-
-            {/* Recent LFG Requests */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              className="space-y-6"
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-bold text-white flex items-center">
-                  <Search className="w-6 h-6 mr-2 text-valorant-red" />
+                  All Activity
+                </button>
+                <button
+                  onClick={() => setActiveFilter('parties')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    activeFilter === 'parties'
+                      ? 'bg-valorant-red text-white'
+                      : 'text-valorant-light/60 hover:text-white'
+                  }`}
+                >
+                  <Users className="w-4 h-4 mr-2 inline" />
+                  Parties
+                </button>
+                <button
+                  onClick={() => setActiveFilter('lfg')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    activeFilter === 'lfg'
+                      ? 'bg-valorant-red text-white'
+                      : 'text-valorant-light/60 hover:text-white'
+                  }`}
+                >
+                  <Search className="w-4 h-4 mr-2 inline" />
                   LFG Requests
-                </h3>
-                <Link
-                  href="/lfg"
-                  className="text-valorant-red hover:text-red-400 transition-colors flex items-center"
-                >
-                  View All
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </Link>
+                </button>
               </div>
 
-              <div className="space-y-4">
-                {loading ? (
-                  <div className="space-y-4">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="card animate-pulse">
-                        <div className="h-4 bg-gray-600 rounded w-3/4 mb-2"></div>
-                        <div className="h-3 bg-gray-600 rounded w-1/2"></div>
+              {/* Quick Actions */}
+              <div className="flex gap-2">
+                <Link href="/create-party" className="btn-primary text-sm px-4 py-2">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Party
+                </Link>
+                <Link href="/create-lfg" className="btn-outline text-sm px-4 py-2">
+                  <Search className="w-4 h-4 mr-2" />
+                  Post LFG
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Compact Listings */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            {loading ? (
+              <div className="grid gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="card animate-pulse">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gray-600 rounded"></div>
+                        <div>
+                          <div className="h-4 bg-gray-600 rounded w-32 mb-2"></div>
+                          <div className="h-3 bg-gray-600 rounded w-24"></div>
+                        </div>
                       </div>
-                    ))}
+                      <div className="h-8 bg-gray-600 rounded w-20"></div>
+                    </div>
                   </div>
-                ) : recentLFG.length > 0 ? (
-                  recentLFG.map((lfg) => (
-                    <LFGCard key={lfg._id} lfg={lfg} />
-                  ))
-                ) : (
-                  <div className="card text-center py-8">
-                    <p className="text-valorant-light/60">No recent LFG requests found</p>
+                ))}
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {/* Show all, parties only, or LFG only based on filter */}
+                {activeFilter === 'all' && (
+                  <>
+                    {recentParties.slice(0, 3).map((party) => (
+                      <CompactPartyCard key={party._id} party={party} />
+                    ))}
+                    {recentLFG.slice(0, 3).map((lfg) => (
+                      <CompactLFGCard key={lfg._id} lfg={lfg} />
+                    ))}
+                  </>
+                )}
+                {activeFilter === 'parties' && recentParties.map((party) => (
+                  <CompactPartyCard key={party._id} party={party} />
+                ))}
+                {activeFilter === 'lfg' && recentLFG.map((lfg) => (
+                  <CompactLFGCard key={lfg._id} lfg={lfg} />
+                ))}
+                
+                {/* Empty state */}
+                {((activeFilter === 'all' && recentParties.length === 0 && recentLFG.length === 0) ||
+                  (activeFilter === 'parties' && recentParties.length === 0) ||
+                  (activeFilter === 'lfg' && recentLFG.length === 0)) && (
+                  <div className="card text-center py-12">
+                    <div className="text-valorant-light/60 mb-4">
+                      {activeFilter === 'all' && <Users className="w-12 h-12 mx-auto mb-4" />}
+                      {activeFilter === 'parties' && <Users className="w-12 h-12 mx-auto mb-4" />}
+                      {activeFilter === 'lfg' && <Search className="w-12 h-12 mx-auto mb-4" />}
+                    </div>
+                    <p className="text-valorant-light/60 mb-4">
+                      No {activeFilter === 'all' ? 'activity' : activeFilter} found
+                    </p>
+                    <div className="flex gap-2 justify-center">
+                      <Link href="/create-party" className="btn-primary text-sm">
+                        Create Party
+                      </Link>
+                      <Link href="/create-lfg" className="btn-outline text-sm">
+                        Post LFG
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>
-            </motion.div>
-          </div>
+            )}
+          </motion.div>
+
+          {/* View All Links */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className="flex justify-center gap-4 mt-8"
+          >
+            <Link
+              href="/parties"
+              className="btn-outline flex items-center"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Browse All Parties
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Link>
+            <Link
+              href="/lfg"
+              className="btn-outline flex items-center"
+            >
+              <Search className="w-4 h-4 mr-2" />
+              Browse All LFG
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Link>
+          </motion.div>
         </div>
       </section>
 
@@ -330,5 +400,129 @@ export default function HomePage() {
         </div>
       </section>
     </div>
+  );
+}
+
+// Compact Party Card Component
+function CompactPartyCard({ party }: { party: PartyInvite }) {
+  const [copied, setCopied] = useState(false);
+  const isExpired = new Date() > new Date(party.expiresAt);
+
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(party.code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy party code');
+    }
+  };
+
+  const getSizeIcon = (size: string) => {
+    switch (size) {
+      case 'Solo': return '👤';
+      case 'Duo': return '👥';
+      case 'Trio': return '👨‍👩‍👧';
+      case 'FourStack': return '👨‍👩‍👧‍👦';
+      default: return '👥';
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -1 }}
+      className={`card transition-all duration-300 ${
+        isExpired ? 'opacity-60 border-gray-600' : 'hover:border-valorant-red/50'
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="text-2xl">{getSizeIcon(party.size)}</div>
+          <div>
+            <h4 className="text-white font-semibold flex items-center">
+              {party.size} Party
+              {isExpired && <span className="ml-2 text-yellow-400 text-xs">(Expired)</span>}
+            </h4>
+            <p className="text-valorant-light/60 text-sm">
+              {party.rank} • {party.region} • {party.mode}
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <div className="bg-valorant-dark/50 rounded-lg px-3 py-2">
+            <p className="text-white font-mono text-sm">{party.code}</p>
+          </div>
+          {!isExpired && (
+            <button
+              onClick={handleCopyCode}
+              className="btn-primary text-xs px-3 py-1"
+              disabled={copied}
+            >
+              {copied ? 'Copied!' : 'Copy'}
+            </button>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// Compact LFG Card Component
+function CompactLFGCard({ lfg }: { lfg: LFGRequest }) {
+  const [copied, setCopied] = useState(false);
+  const isExpired = new Date() > new Date(lfg.expiresAt);
+
+  const handleCopyUsername = async () => {
+    try {
+      await navigator.clipboard.writeText(lfg.username);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy username');
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -1 }}
+      className={`card transition-all duration-300 ${
+        isExpired ? 'opacity-60 border-gray-600' : 'hover:border-valorant-blue/50'
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="text-2xl">🎮</div>
+          <div>
+            <h4 className="text-white font-semibold flex items-center">
+              Looking for Group
+              {isExpired && <span className="ml-2 text-yellow-400 text-xs">(Expired)</span>}
+            </h4>
+            <p className="text-valorant-light/60 text-sm">
+              {lfg.rank} • {lfg.playstyle.join(', ')} • {lfg.availability}
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <div className="bg-valorant-dark/50 rounded-lg px-3 py-2">
+            <p className="text-white font-mono text-sm">{lfg.username}</p>
+          </div>
+          {!isExpired && (
+            <button
+              onClick={handleCopyUsername}
+              className="btn-outline text-xs px-3 py-1"
+              disabled={copied}
+            >
+              {copied ? 'Copied!' : 'Copy'}
+            </button>
+          )}
+        </div>
+      </div>
+    </motion.div>
   );
 }
