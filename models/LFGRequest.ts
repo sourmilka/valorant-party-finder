@@ -3,11 +3,13 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface ILFGRequest extends Document {
   userId: string;
   username: string;
+  server: string;
   rank: string;
   playstyle: string[];
   availability: string;
   description: string;
   tags: string[];
+  inGameName: string;
   createdAt: Date;
   expiresAt: Date;
   views: number;
@@ -25,10 +27,49 @@ const LFGRequestSchema = new Schema<ILFGRequest>({
     required: true,
     trim: true,
   },
+  server: {
+    type: String,
+    required: true,
+    enum: [
+      // North America (NA)
+      'Chicago, IL (USA)',
+      'Los Angeles, CA (USA)',
+      'New York, NY (USA)',
+      'Dallas, TX (USA)',
+      'Phoenix, AZ (USA)',
+      // Latin America North (LATAM North)
+      'Miami, FL (USA)',
+      'Mexico City, Mexico',
+      // Brazil (BR)
+      'São Paulo, Brazil',
+      'Rio de Janeiro, Brazil',
+      // EMEA (Europe/Middle East/North Africa)
+      'Frankfurt, Germany',
+      'London, UK',
+      'Paris, France',
+      'Madrid, Spain',
+      'Warsaw, Poland',
+      'Stockholm, Sweden',
+      'Manama, Bahrain',
+      'Cape Town, South Africa',
+      // Asia-Pacific (APAC)
+      'Mumbai, India',
+      'Singapore',
+      'Hong Kong',
+      'Tokyo, Japan',
+      'Seoul, South Korea',
+      'Sydney, Australia',
+      // China
+      'Tianjin',
+      'Nanjing',
+      'Chongqing',
+      'Guangzhou'
+    ],
+  },
   rank: {
     type: String,
     required: true,
-    enum: ['Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Immortal', 'Radiant'],
+    enum: ['Iron 1', 'Iron 2', 'Iron 3', 'Bronze 1', 'Bronze 2', 'Bronze 3', 'Silver 1', 'Silver 2', 'Silver 3', 'Gold 1', 'Gold 2', 'Gold 3', 'Platinum 1', 'Platinum 2', 'Platinum 3', 'Diamond 1', 'Diamond 2', 'Diamond 3', 'Ascendant 1', 'Ascendant 2', 'Ascendant 3', 'Immortal 1', 'Immortal 2', 'Immortal 3', 'Radiant'],
   },
   playstyle: [{
     type: String,
@@ -46,6 +87,11 @@ const LFGRequestSchema = new Schema<ILFGRequest>({
     type: String,
     enum: ['18+', 'Mic Required', 'Chill', 'Competitive', 'Learning', 'Fun', 'Serious', 'Beginner Friendly'],
   }],
+  inGameName: {
+    type: String,
+    required: true,
+    trim: true,
+  },
   expiresAt: {
     type: Date,
     default: () => new Date(Date.now() + 60 * 60 * 1000), // 1 hour from now

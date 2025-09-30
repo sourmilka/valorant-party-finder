@@ -1,7 +1,7 @@
 {
-  "/parties/page": "app/parties/page.js",
-  "/create-lfg/page": "app/create-lfg/page.js",
-  "/about/page": "app/about/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/page": "app/page.js",
-  "/create-party/page": "app/create-party/page.js"
+  "/api/parties/route": "app/api/parties/route.js",
+  "/api/lfg/route": "app/api/lfg/route.js",
+  "/icon.svg/route": "app/icon.svg/route.js"
 }

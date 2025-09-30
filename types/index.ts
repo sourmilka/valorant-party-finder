@@ -13,12 +13,16 @@ export interface PartyInvite {
   _id: string;
   userId: string | User;
   size: 'Solo' | 'Duo' | 'Trio' | 'FourStack';
-  region: string;
+  server: string;
   rank: string;
   mode: 'Ranked' | 'Unrated' | 'Spike Rush' | 'Deathmatch' | 'Escalation' | 'Replication';
   code: string;
   description: string;
   tags: string[];
+  inGameName: string;
+  preferredRoles: string[];
+  preferredAgents: string[];
+  lookingForRoles: string[];
   createdAt: Date;
   expiresAt: Date;
   views: number;
@@ -29,11 +33,13 @@ export interface LFGRequest {
   _id: string;
   userId: string | User;
   username: string;
+  server: string;
   rank: string;
   playstyle: string[];
   availability: string;
   description: string;
   tags: string[];
+  inGameName: string;
   createdAt: Date;
   expiresAt: Date;
   views: number;
@@ -49,7 +55,7 @@ export interface ApiResponse<T> {
 
 export interface FilterOptions {
   size?: string[];
-  region?: string[];
+  server?: string[];
   rank?: string[];
   mode?: string[];
   playstyle?: string[];
@@ -59,16 +65,20 @@ export interface FilterOptions {
 
 export interface CreatePartyData {
   size: string;
-  region: string;
+  server: string;
   rank: string;
   mode: string;
   code: string;
   description: string;
   tags: string[];
+  preferredRoles: string[];
+  preferredAgents: string[];
+  lookingForRoles: string[];
 }
 
 export interface CreateLFGData {
   username: string;
+  server: string;
   rank: string;
   playstyle: string[];
   availability: string;
