@@ -1118,126 +1118,117 @@ function PartyCard({ party, onCopy, copied }: { party: PartyInvite; onCopy: (tex
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -2 }}
-      className={`relative overflow-hidden transition-all duration-300 rounded-xl border w-full ${
-        isExpired ? 'opacity-60 border-gray-700' : 'hover:border-valorant-red/60 hover:shadow-[0_0_0_1px_rgba(255,70,85,0.4)]'
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ scale: 1.02 }}
+      transition={{ duration: 0.2 }}
+      className={`group relative bg-gradient-to-br from-[#0F1923] to-[#1A1D29] border-2 rounded-2xl overflow-hidden transition-all ${
+        isExpired ? 'opacity-50 border-gray-700' : 'border-valorant-red/40 hover:border-valorant-red hover:shadow-2xl hover:shadow-valorant-red/20'
       }`}
-      style={{ background: 'linear-gradient(180deg, rgba(255,70,85,0.08) 0%, rgba(20,24,28,0.8) 100%)' }}
     >
-      <div className="absolute inset-x-0 top-0 h-1 bg-valorant-red/60" />
-      <div className="p-6 space-y-5">
-        {/* Header (vertical) */}
-        <div className="flex flex-col items-start gap-3">
-          <div className="flex items-center justify-between w-full">
-            <h3 className="text-lg font-semibold text-white flex items-center">
-              {party.size} Party
-              {isExpired && <span className="ml-2 text-yellow-400 text-xs">(Expired)</span>}
-            </h3>
-            <div className="relative w-14 h-14">
-              <Image src={getRankImage(party.rank)} alt={party.rank} fill sizes="56px" className="object-contain" />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 w-full">
-            <div className="px-2 py-1 rounded-md border border-valorant-red/30 text-valorant-light/80 text-[11px] inline-flex items-center gap-1">
-              <Gamepad2 className="w-3 h-3" /> {party.mode}
-            </div>
-            <div className="px-2 py-1 rounded-md border border-valorant-gray/30 text-valorant-light/80 text-[11px] inline-flex items-center gap-1">
-              <MapPin className="w-3 h-3" /> {party.server}
-            </div>
-            <div className="px-2 py-1 rounded-md border border-valorant-gray/30 text-valorant-light/80 text-[11px] inline-flex items-center gap-1">
-              <Clock className="w-3 h-3" /> {getTimeAgo(party.createdAt)} · {getTtl(party.expiresAt)}
-            </div>
-            <div className={`px-2 py-1 rounded-md border text-[11px] inline-flex items-center gap-1 ${party.status === 'Active' ? 'border-emerald-500/40 text-emerald-400' : party.status === 'Expired' ? 'border-yellow-500/40 text-yellow-400' : 'border-valorant-gray/30 text-valorant-light/80'}`}>
-              Status: {party.status}
-            </div>
+      {/* Red accent stripe */}
+      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-valorant-red via-orange-500 to-valorant-red" />
+      
+      {/* Rank badge - top right corner */}
+      <div className="absolute top-4 right-4 w-16 h-16 z-10">
+        <Image src={getRankImage(party.rank)} alt={party.rank} fill sizes="64px" className="object-contain drop-shadow-lg" />
+      </div>
+
+      <div className="p-5 pt-6 space-y-4">
+        {/* Party Code - Hero Element */}
+        <div className="text-center py-6 bg-black/30 rounded-xl border border-valorant-red/30">
+          <div className="text-[10px] uppercase tracking-widest text-valorant-light/60 mb-2">Party Code</div>
+          <div className="font-mono text-3xl tracking-[0.3em] text-white font-bold">{party.code}</div>
+          <div className="mt-3 flex justify-center gap-2">
+            {!isExpired && (
+              <button onClick={() => onCopy(party.code, party._id)} disabled={copied} className="px-4 py-1.5 bg-valorant-red/20 hover:bg-valorant-red/30 border border-valorant-red/50 rounded-lg text-white text-xs font-semibold transition-all">
+                {copied ? '✓ Copied' : 'Copy Code'}
+              </button>
+            )}
+            {party.discordLink && (
+              <a href={party.discordLink} target="_blank" rel="noopener noreferrer" className="px-4 py-1.5 bg-[#5865F2]/20 hover:bg-[#5865F2]/30 border border-[#5865F2]/50 rounded-lg text-white text-xs font-semibold transition-all">
+                Discord
+              </a>
+            )}
           </div>
         </div>
 
-        {party.description && <p className="text-valorant-light/90 text-sm leading-relaxed">{party.description}</p>}
-
-        {/* Identity / Stats */}
-        <div className="flex flex-wrap items-center gap-2 text-[11px] text-valorant-light/80">
+        {/* Info Grid */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-valorant-light/60">Mode</span>
+            <span className="text-white font-semibold">{party.mode}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-valorant-light/60">Size</span>
+            <span className="text-white font-semibold">{party.size}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-valorant-light/60">Server</span>
+            <span className="text-white font-semibold text-right">{party.server}</span>
+          </div>
           {party.inGameName && (
-            <span className="px-2 py-1 rounded-md border border-valorant-gray/30">IGN: {party.inGameName}</span>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-valorant-light/60">Player</span>
+              <span className="text-white font-semibold">{party.inGameName}</span>
+            </div>
           )}
-          {typeof (party as any).views === 'number' && (
-            <span className="px-2 py-1 rounded-md border border-valorant-gray/30">Views: {(party as any).views}</span>
-          )}
-          <span className="px-2 py-1 rounded-md border border-valorant-gray/30">Size: {party.size}</span>
-        </div>
-
-        {/* Codes / Actions */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="bg-valorant-dark/50 rounded-lg px-4 py-2 border border-valorant-gray/20">
-            <p className="text-white font-mono text-lg tracking-widest">{party.code}</p>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-valorant-light/60">Expires</span>
+            <span className="text-orange-400 font-semibold">{getTtl(party.expiresAt)}</span>
           </div>
-          {!isExpired && (
-            <button onClick={() => onCopy(party.code, party._id)} className="btn-primary px-4 py-2 text-sm" disabled={copied}>
-              {copied ? 'Copied!' : (<><Copy className="w-4 h-4 mr-1" />Copy</>)}
-            </button>
-          )}
-          {party.discordLink && (
-            <a href={party.discordLink} target="_blank" rel="noopener noreferrer" className="btn-outline px-4 py-2 text-sm">Discord</a>
-          )}
         </div>
 
-        {/* Looking for roles */}
+        {/* Looking For Roles */}
         {party.lookingForRoles && party.lookingForRoles.length > 0 && (
-          <div>
-            <div className="mb-2 text-xs text-valorant-light/60 tracking-wider uppercase">Looking for</div>
-            <div className="flex flex-wrap gap-2">
+          <div className="pt-3 border-t border-valorant-gray/20">
+            <div className="text-[10px] uppercase tracking-widest text-valorant-light/60 mb-2">Looking For</div>
+            <div className="flex flex-wrap gap-1.5">
               {party.lookingForRoles.map((role, i) => (
-                <span key={`${role}-${i}`} className="inline-flex items-center gap-1 bg-valorant-red/20 rounded-lg px-2 py-1 border border-valorant-red/30 text-white text-xs">
-                  {roleHasImage(role) ? (
-                    <Image src={`/roles/${role}ClassSymbol.png`} alt={role} width={12} height={12} className="object-contain" />
-                  ) : (
-                    <Users className="w-3 h-3" />
-                  )}
-                  {role}
-                </span>
+                <div key={`${role}-${i}`} className="flex items-center gap-1 bg-valorant-red/10 border border-valorant-red/30 rounded-md px-2 py-1">
+                  {roleHasImage(role) && <Image src={`/roles/${role}ClassSymbol.png`} alt={role} width={12} height={12} className="object-contain" />}
+                  <span className="text-white text-[11px] font-medium">{role}</span>
+                </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Creator preferred roles */}
-        {Array.isArray((party as any).preferredRoles) && (party as any).preferredRoles.length > 0 && (
-          <div>
-            <div className="mb-2 text-xs text-valorant-light/60 tracking-wider uppercase">Creator plays</div>
-            <div className="flex flex-wrap gap-2">
-              {(party as any).preferredRoles.map((role: string, i: number) => (
-                <span key={`${role}-pref-${i}`} className="inline-flex items-center gap-1 bg-valorant-dark/30 rounded-lg px-2 py-1 border border-valorant-gray/20 text-valorant-light text-[11px]">
-                  {role}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Preferred agents */}
+        {/* Agents Preview */}
         {party.preferredAgents && party.preferredAgents.length > 0 && (
-          <div>
-            <div className="mb-2 text-xs text-valorant-light/60">Preferred Agents</div>
-            <div className="flex flex-wrap gap-2">
-              {party.preferredAgents.slice(0, 8).map((agent, i) => (
-                <span key={`${agent}-${i}`} className="inline-flex items-center gap-1 bg-valorant-dark/30 rounded-lg px-2 py-1 border border-valorant-gray/20 text-valorant-light text-xs">
-                  <Image src={getAgentImage(agent)} alt={agent} width={14} height={14} className="object-contain" />{agent}
-                </span>
+          <div className="pt-3 border-t border-valorant-gray/20">
+            <div className="text-[10px] uppercase tracking-widest text-valorant-light/60 mb-2">Agents</div>
+            <div className="grid grid-cols-4 gap-2">
+              {party.preferredAgents.slice(0, 4).map((agent, i) => (
+                <div key={`${agent}-${i}`} className="flex flex-col items-center gap-1">
+                  <div className="w-10 h-10 rounded-lg overflow-hidden border border-valorant-gray/30 bg-black/40">
+                    <Image src={getAgentImage(agent)} alt={agent} width={40} height={40} className="object-cover" />
+                  </div>
+                  <span className="text-[9px] text-valorant-light/70 truncate w-full text-center">{agent}</span>
+                </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Tags */}
+        {/* Tags Footer */}
         {party.tags && party.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-1">
-            {party.tags.map((t, i) => (
-              <span key={`${t}-${i}`} className="inline-flex items-center px-2 py-1 rounded-md border border-valorant-gray/30 text-valorant-light/80 text-[11px]">{t.replace(' Required','')}</span>
+          <div className="pt-3 border-t border-valorant-gray/20 flex flex-wrap gap-1">
+            {party.tags.slice(0, 3).map((t, i) => (
+              <span key={`${t}-${i}`} className="px-2 py-0.5 bg-black/40 border border-valorant-gray/40 rounded text-[10px] text-valorant-light/70">
+                {t.replace(' Required', '')}
+              </span>
             ))}
+            {party.tags.length > 3 && (
+              <span className="px-2 py-0.5 text-[10px] text-valorant-light/50">+{party.tags.length - 3}</span>
+            )}
           </div>
         )}
+
+        {/* Time stamp footer */}
+        <div className="pt-2 text-[10px] text-valorant-light/50 text-center">
+          Posted {getTimeAgo(party.createdAt)}
+        </div>
       </div>
     </motion.div>
   );
