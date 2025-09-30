@@ -10,6 +10,7 @@ export interface IPartyInvite extends Document {
   description: string;
   tags: string[];
   inGameName: string;
+  discordLink?: string;
   preferredRoles: string[];
   preferredAgents: string[];
   lookingForRoles: string[];
@@ -93,6 +94,12 @@ const PartyInviteSchema = new Schema<IPartyInvite>({
     required: false,
     trim: true,
       },
+  discordLink: {
+    type: String,
+    required: false,
+    trim: true,
+    maxlength: 300,
+  },
   // Relax tag validation to avoid 500s when UI sends new labels (e.g., "18+ Only", "Microphone Required")
   tags: [{
     type: String,

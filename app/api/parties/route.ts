@@ -5,6 +5,17 @@ import User from '@/models/User';
 import { getUserIdFromRequest } from '@/lib/auth';
 import mongoose from 'mongoose';
 
+// Simple per-identifier cooldown map (in-memory)
+const partyCreationTimestamps = new Map<string, number>();
+const COOLDOWN_MS = 60 * 1000; // 60 seconds between party creations per identifier
+
+function getClientIp(request: NextRequest): string {
+  const xff = request.headers.get('x-forwarded-for');
+  if (xff) return xff.split(',')[0].trim();
+  // @ts-ignore
+  return (request as any).ip || 'unknown';
+}
+
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
@@ -91,7 +102,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Party creation request body:', body);
     
-    let { size, server, rank, mode, code, description, tags, inGameName, preferredRoles, preferredAgents, lookingForRoles } = body;
+    let { size, server, rank, mode, code, description, tags, inGameName, preferredRoles, preferredAgents, lookingForRoles, durationMinutes, discordLink } = body;
 
     // Normalize inputs
     if (typeof code === 'string') {
@@ -121,6 +132,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Enforce cooldown per auth user or IP (prefer IP when unauthenticated)
+    const authUserId = getUserIdFromRequest(request);
+    const identifier = authUserId ? userId : getClientIp(request);
+    const lastTs = partyCreationTimestamps.get(identifier) || 0;
+    const now = Date.now();
+    const elapsed = now - lastTs;
+    if (elapsed < COOLDOWN_MS) {
+      const remaining = Math.ceil((COOLDOWN_MS - elapsed) / 1000);
+      return NextResponse.json(
+        { success: false, error: `Please wait ${remaining}s before creating another party.` },
+        { status: 429 }
+      );
+    }
+
+    // Server-controlled TTL: clamp duration between 5 and 120 minutes, default 30
+    const clampedMinutes = Math.max(5, Math.min(parseInt(durationMinutes || '30', 10) || 30, 120));
+    const expiresAt = new Date(now + clampedMinutes * 60 * 1000);
+
+    // Basic discord link validation (optional)
+    if (discordLink && typeof discordLink === 'string') {
+      const trimmed = discordLink.trim();
+      const looksLikeDiscord = /discord\.gg|discord\.com\/.*/i.test(trimmed);
+      discordLink = looksLikeDiscord ? trimmed : '';
+    }
+
     const party = new PartyInvite({
       userId,
       size,
@@ -131,18 +167,23 @@ export async function POST(request: NextRequest) {
       description: description || '',
       tags: Array.isArray(tags) ? tags : [],
       inGameName: inGameName || '',
+      discordLink: discordLink || '',
       preferredRoles: Array.isArray(preferredRoles) ? preferredRoles : [],
       preferredAgents: Array.isArray(preferredAgents) ? preferredAgents : [],
       lookingForRoles: Array.isArray(lookingForRoles) ? lookingForRoles : [],
+      expiresAt,
     });
 
     await party.save();
     // Skip populate for now since we're using temporary user IDs
     // await party.populate('userId', 'riotId verified');
 
+    // record cooldown timestamp
+    partyCreationTimestamps.set(identifier, now);
+
     return NextResponse.json({
       success: true,
-      data: party,
+      data: { ...party.toObject(), ttlMinutes: clampedMinutes },
     });
   } catch (error: any) {
     console.error('Create party error:', error);

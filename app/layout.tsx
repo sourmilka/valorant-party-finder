@@ -21,6 +21,11 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/',
   },
+  icons: {
+    icon: '/logo.webp',
+    shortcut: '/logo.webp',
+    apple: '/logo.webp',
+  },
   openGraph: {
     title: 'Valorant Party Finder - Find Your Perfect Squad',
     description: 'Connect with Valorant players worldwide. Find parties, create LFG requests, and build your competitive team.',

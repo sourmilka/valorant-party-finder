@@ -1,7 +1,5 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/page": "app/page.js",
   "/api/parties/route": "app/api/parties/route.js",
-  "/api/lfg/route": "app/api/lfg/route.js",
-  "/icon.svg/route": "app/icon.svg/route.js"
+  "/page": "app/page.js",
+  "/api/lfg/route": "app/api/lfg/route.js"
 }
