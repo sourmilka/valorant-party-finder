@@ -1141,6 +1141,8 @@ function PartyCard({ party, onCopy, copied }: { party: PartyInvite; onCopy: (tex
 function LFGCard({ lfg, onCopy, copied }: { lfg: LFGRequest; onCopy: (text: string, type: string) => void; copied: boolean }) {
   const isExpired = new Date() > new Date(lfg.expiresAt);
 
+  const roleHasImage = (role: string) => ['Duelist','Initiator','Controller','Sentinel'].includes(role);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -1200,15 +1202,19 @@ function LFGCard({ lfg, onCopy, copied }: { lfg: LFGRequest; onCopy: (text: stri
                   <div className="flex flex-wrap gap-2">
                     {lfg.playstyle.map((role, index) => (
                       <div key={index} className="flex items-center space-x-1 bg-valorant-blue/20 rounded-lg px-2 py-1 border border-valorant-blue/30">
-                        <div className="w-3 h-3 relative">
-                          <Image
-                            src={`/roles/${role}ClassSymbol.png`}
-                            alt={role}
-                            fill
-                            sizes="12px"
-                            className="object-contain"
-                          />
-                        </div>
+                        {roleHasImage(role) ? (
+                          <div className="w-3 h-3 relative">
+                            <Image
+                              src={`/roles/${role}ClassSymbol.png`}
+                              alt={role}
+                              fill
+                              sizes="12px"
+                              className="object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <Users className="w-3 h-3" />
+                        )}
                         <span className="text-xs text-white">{role}</span>
                       </div>
                     ))}
