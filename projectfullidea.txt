@@ -1,0 +1,357 @@
+# Valorant Party Finder Website Documentation
+
+## Document Information
+- **Title:** Valorant Party Finder - Comprehensive System Documentation
+- **Version:** 1.0
+- **Date:** September 30, 2025
+- **Author:** Grok 4 (xAI Assistant)
+- **Purpose:** This document provides a detailed, professional blueprint for developing, implementing, and maintaining the "Valorant Party Finder" (VPF) website. It encompasses the conceptual overview, functional specifications, user interface designs, technical architecture, security considerations, and deployment strategies. This is derived from the initial concept of a community platform to facilitate Valorant player matchmaking via party codes and LFG (Looking for Group) requests.
+- **Audience:** Developers, designers, project managers, and stakeholders involved in building or evaluating the VPF platform.
+- **Assumptions:** The platform targets Valorant players familiar with Riot Games' mechanics. Development assumes a modern web stack (e.g., React/Next.js frontend, Node.js backend, Firebase or MongoDB for database). No prior Riot API integration is assumed, as the system relies on user-submitted data.
+
+## Table of Contents
+1. [Executive Summary](#executive-summary)
+2. [Introduction](#introduction)
+   - [Project Background](#project-background)
+   - [Objectives](#objectives)
+   - [Scope](#scope)
+   - [Out-of-Scope](#out-of-scope)
+3. [System Requirements](#system-requirements)
+   - [Functional Requirements](#functional-requirements)
+   - [Non-Functional Requirements](#non-functional-requirements)
+   - [User Roles](#user-roles)
+4. [Architecture Overview](#architecture-overview)
+   - [High-Level Design](#high-level-design)
+   - [Technology Stack](#technology-stack)
+   - [Data Models](#data-models)
+   - [Integration Points](#integration-points)
+5. [Detailed Page and Feature Descriptions](#detailed-page-and-feature-descriptions)
+   - [Landing/Home Page](#landinghome-page)
+   - [Create Party Invitation Page](#create-party-invitation-page)
+   - [Browse Parties Page](#browse-parties-page)
+   - [Create LFG Request Page](#create-lfg-request-page)
+   - [Browse LFG Requests Page](#browse-lfg-requests-page)
+   - [User Dashboard Page](#user-dashboard-page)
+   - [About/FAQ Page](#aboutfaq-page)
+   - [Additional Features](#additional-features)
+6. [User Experience and Design Guidelines](#user-experience-and-design-guidelines)
+   - [UI/UX Principles](#uiux-principles)
+   - [Accessibility](#accessibility)
+   - [Responsive Design](#responsive-design)
+7. [Security and Privacy](#security-and-privacy)
+   - [Authentication and Authorization](#authentication-and-authorization)
+   - [Data Protection](#data-protection)
+   - [Moderation and Reporting](#moderation-and-reporting)
+   - [Compliance](#compliance)
+8. [Testing and Quality Assurance](#testing-and-quality-assurance)
+   - [Test Types](#test-types)
+   - [Edge Cases](#edge-cases)
+9. [Deployment and Maintenance](#deployment-and-maintenance)
+   - [Deployment Pipeline](#deployment-pipeline)
+   - [Monitoring and Scaling](#monitoring-and-scaling)
+   - [Maintenance Plan](#maintenance-plan)
+10. [Risks and Mitigations](#risks-and-mitigations)
+11. [Appendices](#appendices)
+    - [Glossary](#glossary)
+    - [References](#references)
+
+## Executive Summary
+Valorant Party Finder (VPF) is a web-based platform designed to streamline the process of finding and joining Valorant parties. By leveraging Valorant's built-in party code system and user-submitted LFG requests, VPF addresses common pain points in solo queuing, such as mismatched ranks, regions, or playstyles. The platform features real-time posting, advanced filtering, and safety tools to foster a positive community.
+
+Key highlights:
+- **Core Functionality:** Users create/browse party invites with codes or LFG requests with usernames.
+- **Enhancements:** Auto-expiration, tags, analytics, and moderation for usability and safety.
+- **Technical Feasibility:** Built on scalable web technologies; MVP deployable in weeks.
+- **Business Value:** Free core service with premium upsell potential; community-driven growth via social sharing.
+
+This documentation serves as a complete guide, ensuring the platform is robust, user-friendly, and aligned with Valorant's ecosystem.
+
+## Introduction
+
+### Project Background
+Valorant, a tactical FPS by Riot Games, allows players to queue in parties of 1-5 via the in-game client. Party codes enable quick joins without friending, but finding compatible players often requires external tools like Discord or Reddit. VPF centralizes this into a dedicated website, reducing friction and enhancing matchmaking.
+
+The concept evolved from user frustration with solo/duo queuing, proposing a bulletin-board style site for invites and requests. It respects Valorant's rules (e.g., no 4-stacks in ranked) and promotes positive interactions.
+
+### Objectives
+- Provide a seamless way to share/join parties using Valorant codes.
+- Enable solo players to advertise availability for invites.
+- Incorporate filters, real-time updates, and safety features.
+- Ensure scalability for peak gaming hours (e.g., evenings/weekends).
+- Maintain compliance with Riot's terms and data privacy laws.
+
+### Scope
+- Web application with 7 core pages.
+- User accounts for posting/editing.
+- Real-time data syncing.
+- Basic moderation tools.
+- Integration with social sharing (e.g., Twitter/X).
+
+### Out-of-Scope
+- Mobile app (focus on responsive web).
+- Direct Riot API integration (user-submitted data only).
+- In-platform voice/video chat (use Valorant's built-in).
+- Advanced ML matching (initially rule-based filters).
+
+## System Requirements
+
+### Functional Requirements
+1. **User Registration/Login:** Email or Riot ID OAuth; guest browsing.
+2. **Post Creation:** Forms for party invites (with code) and LFG requests (with username).
+3. **Browsing and Filtering:** Searchable lists with real-time updates.
+4. **Interactions:** Copy codes/usernames; react/report posts.
+5. **Management:** Dashboard for post editing, analytics.
+6. **Expiration:** Auto-remove stale posts (e.g., 30min for codes).
+7. **Notifications:** Email/DM for reactions or joins (optional premium).
+
+### Non-Functional Requirements
+- **Performance:** Page loads <2s; handle 10k concurrent users.
+- **Availability:** 99.9% uptime; CDN for static assets.
+- **Security:** HTTPS; input sanitization; CAPTCHA on posts.
+- **Scalability:** Cloud-based (e.g., AWS/GCP) with auto-scaling.
+- **Compatibility:** Modern browsers (Chrome, Firefox); mobile-first design.
+
+### User Roles
+- **Guest:** Browse only.
+- **Registered User:** Post, edit, dashboard access.
+- **Moderator/Admin:** Review reports, ban users (future expansion).
+
+## Architecture Overview
+
+### High-Level Design
+VPF follows a client-server architecture:
+- **Frontend:** SPA (Single Page Application) for dynamic UI.
+- **Backend:** RESTful API for CRUD operations on posts.
+- **Database:** NoSQL (e.g., Firestore) for flexible schemas.
+- **Real-Time:** WebSockets (e.g., Socket.io) for live feeds.
+- **Flow:** User → Frontend → API → DB; push updates via sockets.
+
+### Technology Stack
+- **Frontend:** React.js/Next.js, Tailwind CSS for styling.
+- **Backend:** Node.js/Express.js.
+- **Database:** MongoDB or Firebase Realtime Database.
+- **Auth:** JWT or Firebase Auth.
+- **Deployment:** Vercel/Netlify for frontend; Heroku/AWS for backend.
+- **Other:** Redis for caching; Cloudinary for image uploads (e.g., rank proofs).
+
+### Data Models
+- **PartyInvite Schema:**
+  - id: String (UUID)
+  - userId: String
+  - size: Enum (Solo, Duo, Trio, FourStack)
+  - region: String
+  - rank: String
+  - mode: Enum (Ranked, Unrated, etc.)
+  - code: String (validated format)
+  - description: String
+  - tags: Array<String>
+  - createdAt: Date
+  - expiresAt: Date (default +30min)
+  - views: Number
+  - status: Enum (Active, Expired)
+
+- **LFGRequest Schema:** Similar, but with username instead of code; expiresAt +1hr.
+
+- **User Schema:** id, email, riotId, bio, verified: Boolean, blocked: Array<UserId>.
+
+### Integration Points
+- Social Sharing: Twitter/X API for auto-tweets.
+- Email: SendGrid for notifications.
+- Analytics: Google Analytics for usage tracking.
+
+## Detailed Page and Feature Descriptions
+Each page is described with purpose, layout, elements, functions, interactions, and ties to Valorant mechanics.
+
+### Landing/Home Page
+**Purpose:** Entry point to attract and orient users; quick access to core actions.
+
+**Layout:** Dark theme (Valorant-inspired); hero banner, tabbed feeds, sidebar stats.
+
+**Key Elements:**
+- Search bar with filters (party size, region, rank, mode).
+- Tabbed live feeds: "Open Parties" and "LFG Requests" (5 recent each).
+- CTA buttons: "Create Party," "Post LFG."
+- Footer with links.
+
+**Functions:** Fetches recent posts via API; auto-refreshes every 30s.
+
+**Interactions:** Filter application updates feeds; click card → detailed view.
+
+**Valorant Tie-In:** Reminds users of code generation in-client.
+
+### Create Party Invitation Page
+**Purpose:** Form-based creation of invites with validation.
+
+**Layout:** Stepper form; preview pane.
+
+**Key Elements:**
+- Dropdowns: Size (with ranked warnings), region, rank, mode.
+- Inputs: Code (regex validate /^[\w-]{3}-[\w-]{3}-[\w-]{3}$/), description.
+- Tags checkboxes; submit button.
+
+**Functions:** Validates inputs; posts to DB; sets timer for expiration.
+
+**Interactions:** Real-time preview; success redirect to browse.
+
+**Valorant Tie-In:** Tips on code expiry and party restrictions.
+
+### Browse Parties Page
+**Purpose:** Filtered gallery for joining parties.
+
+**Layout:** Grid cards; sticky filters.
+
+**Key Elements:**
+- Filters: Sliders/dropdowns; sort options.
+- Cards: Icons, code copy button, timestamp.
+
+**Functions:** Queries DB with filters; infinite scroll.
+
+**Interactions:** Copy triggers clipboard; report flags for mod review.
+
+**Valorant Tie-In:** Code paste instructions.
+
+### Create LFG Request Page
+**Purpose:** Advertise solo availability.
+
+**Layout:** Compact form; bio focus.
+
+**Key Elements:**
+- Inputs: Username (validate format), rank, playstyle.
+- Time picker for availability.
+
+**Functions:** Similar to invites; optional image upload for verification.
+
+**Interactions:** Attach to existing party option.
+
+**Valorant Tie-In:** Friend request flow explanation.
+
+### Browse LFG Requests Page
+**Purpose:** Scout solos for parties.
+
+**Layout:** Grid; role-based filters.
+
+**Key Elements:**
+- Cards: Username copy, bio, timer.
+- Recommendations based on user prefs.
+
+**Functions:** Advanced queries (e.g., role matching).
+
+**Interactions:** Mass copy for party leaders.
+
+**Valorant Tie-In:** Invite mechanics reminder.
+
+### User Dashboard Page
+**Purpose:** Personal management hub.
+
+**Layout:** Tabs: Posts, Activity, Profile.
+
+**Key Elements:**
+- Tables: Post lists with metrics.
+- Graphs: Join analytics.
+- Edit forms.
+
+**Functions:** CRUD on own posts; verification queue.
+
+**Interactions:** Repost button; notification toggles.
+
+**Valorant Tie-In:** Track in-game success indirectly.
+
+### About/FAQ Page
+**Purpose:** Educate and support.
+
+**Layout:** Accordions; contact form.
+
+**Key Elements:**
+- Sections: How-to, Safety, Rules.
+- Embedded images/demos.
+
+**Functions:** Static with dynamic stories.
+
+**Interactions:** Links to other pages.
+
+**Valorant Tie-In:** Links to Riot docs.
+
+### Additional Features
+- **Real-Time Updates:** Socket.io for new post notifications.
+- **Tags System:** Predefined (e.g., "18+", "Mic Required") for filtering.
+- **Analytics:** Track views/joins per post.
+- **Safety:** Auto-moderate descriptions for profanity; user blocks.
+- **Premium:** Pinned posts, ad-free (future).
+
+## User Experience and Design Guidelines
+
+### UI/UX Principles
+- Intuitive: Mirror Valorant UI (agents, ranks as icons).
+- Engaging: Gamified elements (badges for active users).
+- Efficient: One-click copies; minimal forms.
+
+### Accessibility
+- WCAG 2.1 compliance: Alt text for images, keyboard nav, color contrast.
+- Screen reader support for feeds.
+
+### Responsive Design
+- Mobile: Stacked cards, touch-friendly buttons.
+- Breakpoints: 320px (mobile), 768px (tablet), 1024px (desktop).
+
+## Security and Privacy
+
+### Authentication and Authorization
+- OAuth/JWT: Prevent unauthorized posts.
+- Rate Limiting: 5 posts/hour per IP.
+
+### Data Protection
+- Encrypt sensitive data (e.g., emails).
+- GDPR/CCPA: Consent for data use; delete on request.
+
+### Moderation and Reporting
+- Flagging system: Auto-hide on 3 reports.
+- AI moderation (e.g., OpenAI API for toxicity).
+
+### Compliance
+- No child-targeted features; 13+ age gate.
+- Riot Terms: No scraping; user data only.
+
+## Testing and Quality Assurance
+
+### Test Types
+- Unit: Form validations.
+- Integration: API endpoints.
+- E2E: User flows (e.g., post → browse → join).
+- Load: Simulate 1k users.
+
+### Edge Cases
+- Expired codes: Graceful handling.
+- Invalid inputs: Error messages.
+- High traffic: Queue posts.
+
+## Deployment and Maintenance
+
+### Deployment Pipeline
+- CI/CD: GitHub Actions → Vercel.
+- Environments: Dev, Staging, Prod.
+
+### Monitoring and Scaling
+- Tools: Sentry for errors; Prometheus for metrics.
+- Auto-scale backend on traffic spikes.
+
+### Maintenance Plan
+- Weekly updates: Bug fixes, feature adds.
+- User Feedback: In-site surveys.
+
+## Risks and Mitigations
+- **Risk:** Spam posts. **Mitigation:** CAPTCHA, mod tools.
+- **Risk:** Data breaches. **Mitigation:** Audits, encryption.
+- **Risk:** Low Adoption. **Mitigation:** SEO, Riot community promo.
+- **Risk:** Valorant Changes (e.g., code system). **Mitigation:** Flexible schemas.
+
+## Appendices
+
+### Glossary
+- **Party Code:** Valorant-generated join string.
+- **LFG:** Looking for Group.
+- **MVP:** Minimum Viable Product.
+
+### References
+- Valorant Official Docs: https://playvalorant.com/en-us/support/
+- Web Dev Best Practices: MDN Web Docs.
+- Security Guidelines: OWASP Cheat Sheet.

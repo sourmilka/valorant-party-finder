@@ -1,0 +1,62 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="valorant-pattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+      <rect width="100" height="100" fill="#0F1419"/>
+      <circle cx="50" cy="50" r="1" fill="#FF4655" opacity="0.1"/>
+      <circle cx="25" cy="25" r="0.5" fill="#FF4655" opacity="0.05"/>
+      <circle cx="75" cy="75" r="0.5" fill="#FF4655" opacity="0.05"/>
+    </pattern>
+    <linearGradient id="valorant-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF4655;stop-opacity:0.1" />
+      <stop offset="50%" style="stop-color:#0F1419;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#1E2328;stop-opacity:0.9" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="800" fill="url(#valorant-pattern)"/>
+  
+  <!-- Valorant-inspired geometric shapes -->
+  <g opacity="0.05">
+    <!-- Hexagons -->
+    <polygon points="200,100 250,125 250,175 200,200 150,175 150,125" fill="#FF4655"/>
+    <polygon points="800,300 850,325 850,375 800,400 750,375 750,325" fill="#FF4655"/>
+    <polygon points="1000,600 1050,625 1050,675 1000,700 950,675 950,625" fill="#FF4655"/>
+    
+    <!-- Triangles -->
+    <polygon points="100,400 150,350 150,450" fill="#FF4655"/>
+    <polygon points="1100,200 1150,150 1150,250" fill="#FF4655"/>
+    
+    <!-- Circles -->
+    <circle cx="300" cy="500" r="30" fill="#FF4655"/>
+    <circle cx="900" cy="150" r="20" fill="#FF4655"/>
+    <circle cx="600" cy="650" r="25" fill="#FF4655"/>
+  </g>
+  
+  <!-- Subtle grid lines -->
+  <g stroke="#FF4655" stroke-width="0.5" opacity="0.03">
+    <line x1="0" y1="0" x2="1200" y2="0"/>
+    <line x1="0" y1="100" x2="1200" y2="100"/>
+    <line x1="0" y1="200" x2="1200" y2="200"/>
+    <line x1="0" y1="300" x2="1200" y2="300"/>
+    <line x1="0" y1="400" x2="1200" y2="400"/>
+    <line x1="0" y1="500" x2="1200" y2="500"/>
+    <line x1="0" y1="600" x2="1200" y2="600"/>
+    <line x1="0" y1="700" x2="1200" y2="700"/>
+    <line x1="0" y1="800" x2="1200" y2="800"/>
+    
+    <line x1="0" y1="0" x2="0" y2="800"/>
+    <line x1="100" y1="0" x2="100" y2="800"/>
+    <line x1="200" y1="0" x2="200" y2="800"/>
+    <line x1="300" y1="0" x2="300" y2="800"/>
+    <line x1="400" y1="0" x2="400" y2="800"/>
+    <line x1="500" y1="0" x2="500" y2="800"/>
+    <line x1="600" y1="0" x2="600" y2="800"/>
+    <line x1="700" y1="0" x2="700" y2="800"/>
+    <line x1="800" y1="0" x2="800" y2="800"/>
+    <line x1="900" y1="0" x2="900" y2="800"/>
+    <line x1="1000" y1="0" x2="1000" y2="800"/>
+    <line x1="1100" y1="0" x2="1100" y2="800"/>
+    <line x1="1200" y1="0" x2="1200" y2="800"/>
+  </g>
+</svg>

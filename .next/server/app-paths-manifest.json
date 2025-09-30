@@ -1,0 +1,7 @@
+{
+  "/parties/page": "app/parties/page.js",
+  "/create-lfg/page": "app/create-lfg/page.js",
+  "/about/page": "app/about/page.js",
+  "/page": "app/page.js",
+  "/create-party/page": "app/create-party/page.js"
+}
