@@ -1,16 +1,16 @@
-# Valorant Party Finder
+# Valorant LFG / Party Finder
 
-A professional Next.js website for finding and creating Valorant parties with real-time features, built with Valorant-inspired design and UI/UX.
+A polished Next.js 14 app to create and browse Valorant parties and LFG posts with a clean Valorant-inspired UI. It supports MongoDB via Mongoose, JWT auth, and responsive UX with Tailwind.
 
 ## 🎮 Features Implemented
 
 ### ✅ Core Features
-- **User Authentication**: JWT-based auth with registration/login
-- **Party Management**: Create, browse, and join party invitations
-- **LFG System**: Looking for Group requests for solo players
-- **Real-time Updates**: Live feeds and instant notifications
-- **Advanced Filtering**: Filter by rank, region, mode, and more
-- **Responsive Design**: Mobile-first design with Valorant aesthetics
+- **Authentication**: JWT-based register/login
+- **Party Management**: Create, browse, and share party codes
+- **LFG System**: Post LFG with playstyles and availability
+- **Live Feed**: Fresh posts with client-side refresh
+- **Filtering**: Rank, server, mode, and sort options
+- **Responsive UI**: Tailwind + Framer Motion animations
 
 ### ✅ Pages Created
 - **Landing Page**: Hero section with live feeds and statistics
