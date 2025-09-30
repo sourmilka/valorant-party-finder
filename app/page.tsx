@@ -403,11 +403,11 @@ export default function HomePage() {
                   <div className="p-8">
                     {/* Header Section */}
                     <div className="text-center mb-8">
-                      <h2 className="text-3xl font-bold text-white mb-4 flex items-center justify-center">
+                      <h2 className="text-3xl font-bold text-white mb-2 flex items-center justify-center">
                         <Users className="w-8 h-8 mr-3 text-valorant-red" />
                         Create Party
                       </h2>
-                      <p className="text-valorant-light/80 text-lg max-w-2xl mx-auto">
+                      <p className="text-valorant-light/70 text-sm max-w-2xl mx-auto">
                         Share your party code and find teammates who match your skill level and playstyle. 
                         Your party will appear in the live feed for other players to join.
                       </p>
@@ -416,6 +416,10 @@ export default function HomePage() {
                     <form onSubmit={handleCreateParty} className="space-y-8">
                       {/* Basic Settings */}
                       <div className="bg-valorant-dark/30 rounded-xl p-6 border border-valorant-gray/20 space-y-6">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-white font-semibold">Basic Settings</h3>
+                          <div className="h-px flex-1 ml-4 bg-valorant-gray/20" />
+                        </div>
                         {/* Party Size & Game Mode Row */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                           <div>
@@ -576,6 +580,10 @@ export default function HomePage() {
 
                       {/* Team Preferences */}
                       <div className="bg-valorant-dark/30 rounded-xl p-6 border border-valorant-gray/20 space-y-6">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-white font-semibold">Team Preferences</h3>
+                          <div className="h-px flex-1 ml-4 bg-valorant-gray/20" />
+                        </div>
                         {/* Looking For */}
                         <div>
                           <label className="block text-sm font-semibold text-white mb-3">
@@ -748,6 +756,10 @@ export default function HomePage() {
 
                         {/* Additional Notes */}
                         <div className="bg-valorant-dark/30 rounded-xl p-6 border border-valorant-gray/20">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-white font-semibold">Additional Notes</h3>
+                            <div className="h-px flex-1 ml-4 bg-valorant-gray/20" />
+                          </div>
                           <label className="block text-sm font-semibold text-white mb-3">
                             Additional Notes (Optional)
                           </label>
