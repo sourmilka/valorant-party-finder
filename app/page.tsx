@@ -44,7 +44,8 @@ export default function HomePage() {
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
 
   // In-game name state
-  const [gameName, setGameName] = useState('');
+  const [riotName, setRiotName] = useState('');
+  const [riotTag, setRiotTag] = useState('');
 
   // Form states
   const [partyForm, setPartyForm] = useState<CreatePartyData>({
@@ -126,7 +127,8 @@ export default function HomePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...partyForm,
-          inGameName: gameName
+          inGameName: riotName && riotTag ? `${riotName}#${riotTag}` : '',
+          durationMinutes: (partyForm as any).durationMinutes || 30
         })
       });
       
@@ -146,7 +148,8 @@ export default function HomePage() {
           preferredAgents: [],
           lookingForRoles: []
         });
-        setGameName('');
+        setRiotName('');
+        setRiotTag('');
       } else {
         const errorData = await response.json();
         console.error('Failed to create party:', response.status, errorData);
@@ -166,7 +169,7 @@ export default function HomePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...lfgForm,
-          inGameName: gameName
+          inGameName: riotName && riotTag ? `${riotName}#${riotTag}` : ''
         })
       });
       
@@ -183,7 +186,8 @@ export default function HomePage() {
           description: '',
           tags: []
         });
-        setGameName('');
+        setRiotName('');
+        setRiotTag('');
       } else {
         const errorData = await response.json();
         console.error('Failed to create LFG:', response.status, errorData);
@@ -202,6 +206,19 @@ export default function HomePage() {
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   };
+
+  const gameModes: { key: string; label: string; icon: string }[] = [
+    { key: 'Ranked', label: 'Competitive', icon: '/gamemode/Competetrive.webp' },
+    { key: 'Unrated', label: 'Unrated', icon: '/gamemode/Normal.webp' },
+    { key: 'Swiftplay', label: 'Swiftplay', icon: '/gamemode/Swiftplay.webp' },
+    { key: 'Spike Rush', label: 'Spike Rush', icon: '/gamemode/Spike_Rush.webp' },
+    { key: 'Deathmatch', label: 'Deathmatch', icon: '/gamemode/Deathmatch.webp' },
+    { key: 'Team Deathmatch', label: 'TDM', icon: '/gamemode/Team_Deathmatch.webp' },
+    { key: 'Escalation', label: 'Escalation', icon: '/gamemode/Escalation.webp' },
+    { key: 'Replication', label: 'Replication', icon: '/gamemode/Replication.webp' },
+    { key: 'Snowball Fight', label: 'Snowball', icon: '/gamemode/Snowball_Fight.webp' },
+    { key: 'Premier', label: 'Premier', icon: '/gamemode/Premier.webp' },
+  ];
 
   return (
     <div className="min-h-screen bg-valorant-dark relative overflow-hidden">
@@ -400,12 +417,12 @@ export default function HomePage() {
                       {/* Basic Settings */}
                       <div className="space-y-6">
                         {/* Party Size & Game Mode Row */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                           <div>
                             <label className="block text-sm font-semibold text-white mb-3">
                               Party Size
                             </label>
-                            <div className="flex gap-3">
+                            <div className="grid grid-cols-3 gap-3">
                               {['Duo', 'Trio', 'FourStack'].map((size) => (
                                 <button
                                   key={size}
@@ -427,27 +444,36 @@ export default function HomePage() {
                             <label className="block text-sm font-semibold text-white mb-3">
                               Game Mode
                             </label>
-                            <div className="flex gap-2">
-                              {['Ranked', 'Unrated'].map((mode) => (
-                                <button
-                                  key={mode}
-                                  type="button"
-                                  onClick={() => setPartyForm({...partyForm, mode: mode as any})}
-                                  className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all ${
-                                    partyForm.mode === mode
-                                      ? 'bg-valorant-red text-white shadow-lg'
-                                      : 'bg-valorant-dark/50 text-valorant-light hover:bg-valorant-dark border border-valorant-gray/30'
-                                  }`}
-                                >
-                                  {mode}
-                                </button>
-                              ))}
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                              {gameModes.map((m) => {
+                                const isActive = partyForm.mode === m.key;
+                                return (
+                                  <button
+                                    key={m.key}
+                                    type="button"
+                                    onClick={() => setPartyForm({ ...partyForm, mode: m.key as any })}
+                                    className={`group flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                                      isActive
+                                        ? 'bg-valorant-red/20 border-valorant-red text-white shadow-lg'
+                                        : 'bg-valorant-dark/50 border-valorant-gray/30 text-valorant-light hover:bg-valorant-dark hover:border-valorant-gray/50'
+                                    }`}
+                                  >
+                                    <div className="relative w-7 h-7 shrink-0 rounded-md overflow-hidden ring-1 ring-valorant-gray/30 group-hover:ring-valorant-red/40">
+                                      <Image src={m.icon} alt={m.label} fill sizes="28px" className="object-cover" />
+                                    </div>
+                                    <div className="flex flex-col items-start">
+                                      <span className="text-sm font-semibold leading-none">{m.label}</span>
+                                      <span className={`text-[10px] uppercase tracking-widest ${isActive ? 'text-valorant-red' : 'text-valorant-light/50'}`}>{m.key}</span>
+                                    </div>
+                                  </button>
+                                );
+                              })}
                             </div>
                           </div>
                         </div>
 
-                        {/* Server & Rank Row */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Server & RiotID/Rank Row */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                           <div>
                             <label className="block text-sm font-semibold text-white mb-3">
                               Server Location
@@ -473,22 +499,33 @@ export default function HomePage() {
                             </select>
                     </div>
 
-                          {/* In-Game Name Input */}
+                          {/* Riot ID split: name # tag */}
                           <div>
                             <label className="block text-sm font-semibold text-white mb-3">
                               Your In-Game Name
                             </label>
-                            <input
-                              type="text"
-                              placeholder="Enter: YourName#Tag (e.g., Tardic#6969)"
-                              value={gameName}
-                              onChange={(e) => setGameName(e.target.value)}
-                              className="w-full px-4 py-3 bg-valorant-dark/50 border border-valorant-gray/30 rounded-lg text-white placeholder-valorant-light/50 focus:outline-none focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
-                            />
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                placeholder="Tardic"
+                                value={riotName}
+                                onChange={(e) => setRiotName(e.target.value)}
+                                className="w-full px-4 py-3 bg-valorant-dark/50 border border-valorant-gray/30 rounded-lg text-white placeholder-valorant-light/50 focus:outline-none focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
+                              />
+                              <div className="px-3 py-3 bg-valorant-dark/60 border border-valorant-gray/30 rounded-lg text-valorant-light/80 font-semibold select-none">#</div>
+                              <input
+                                type="text"
+                                placeholder="6969"
+                                value={riotTag}
+                                onChange={(e) => setRiotTag(e.target.value)}
+                                className="w-28 px-3 py-3 bg-valorant-dark/50 border border-valorant-gray/30 rounded-lg text-white placeholder-valorant-light/50 focus:outline-none focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
+                                maxLength={5}
+                              />
+                            </div>
                             <p className="mt-2 text-sm text-valorant-light/60">
-                              💡 Enter your Valorant in-game name (e.g., Tardic#6969)
+                              💡 Enter your Valorant Riot ID (e.g., Tardic # 6969)
                             </p>
-                    </div>
+                          </div>
 
                           <div>
                             <label className="block text-sm font-semibold text-white mb-3">
@@ -512,7 +549,7 @@ export default function HomePage() {
                                   sizes="24px"
                                   className="object-contain"
                                 />
-                  </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -724,8 +761,20 @@ export default function HomePage() {
                         </div>
                       </div>
 
-                      {/* Action Buttons */}
+                      {/* Duration (TTL) and Action Buttons */}
                       <div className="flex gap-4 pt-6">
+                        <div className="flex items-center gap-3">
+                          <label className="text-sm font-semibold text-white">Active For</label>
+                          <select
+                            value={(partyForm as any).durationMinutes || 30}
+                            onChange={(e) => setPartyForm({ ...partyForm, ...( { durationMinutes: parseInt(e.target.value, 10) } as any) })}
+                            className="py-2 px-3 bg-valorant-dark/50 border border-valorant-gray/30 rounded-lg text-white focus:border-valorant-red focus:ring-1 focus:ring-valorant-red/20"
+                          >
+                            {[5,10,15,30,60,90,120].map(m => (
+                              <option key={m} value={m}>{m} min</option>
+                            ))}
+                          </select>
+                        </div>
                         <button
                           type="button"
                           onClick={() => setActiveTab('browse')}
@@ -825,8 +874,8 @@ export default function HomePage() {
                             <input
                               type="text"
                               placeholder="Enter: YourName#Tag (e.g., Tardic#6969)"
-                              value={gameName}
-                              onChange={(e) => setGameName(e.target.value)}
+                              value={riotName}
+                              onChange={(e) => setRiotName(e.target.value)}
                               className="w-full px-4 py-3 bg-valorant-dark/50 border border-valorant-gray/30 rounded-lg text-white placeholder-valorant-light/50 focus:outline-none focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
                             />
                             <p className="mt-2 text-sm text-valorant-light/60">
