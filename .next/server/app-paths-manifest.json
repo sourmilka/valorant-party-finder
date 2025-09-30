@@ -1,5 +1,0 @@
-{
-  "/api/parties/route": "app/api/parties/route.js",
-  "/page": "app/page.js",
-  "/api/lfg/route": "app/api/lfg/route.js"
-}
