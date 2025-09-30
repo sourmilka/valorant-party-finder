@@ -415,7 +415,7 @@ export default function HomePage() {
                     
                     <form onSubmit={handleCreateParty} className="space-y-8">
                       {/* Basic Settings */}
-                      <div className="space-y-6">
+                      <div className="bg-valorant-dark/30 rounded-xl p-6 border border-valorant-gray/20 space-y-6">
                         {/* Party Size & Game Mode Row */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                           <div>
@@ -428,13 +428,13 @@ export default function HomePage() {
                                   key={size}
                                   type="button"
                                   onClick={() => setPartyForm({...partyForm, size: size as any})}
-                                  className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all ${
+                                  className={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-semibold transition-all border ${
                                     partyForm.size === size
-                                      ? 'bg-valorant-red text-white shadow-lg'
-                                      : 'bg-valorant-dark/50 text-valorant-light hover:bg-valorant-dark border border-valorant-gray/30'
+                                      ? 'bg-valorant-red/20 text-white border-valorant-red shadow-lg'
+                                      : 'bg-valorant-dark/50 text-valorant-light hover:bg-valorant-dark border-valorant-gray/30'
                                   }`}
                                 >
-                                  {size === 'FourStack' ? 'Four Stack' : size}
+                                  <span>{size === 'FourStack' ? 'Four Stack' : size}</span>
                                 </button>
                               ))}
                             </div>
@@ -575,7 +575,7 @@ export default function HomePage() {
                     </div>
 
                       {/* Team Preferences */}
-                      <div className="space-y-6">
+                      <div className="bg-valorant-dark/30 rounded-xl p-6 border border-valorant-gray/20 space-y-6">
                         {/* Looking For */}
                         <div>
                           <label className="block text-sm font-semibold text-white mb-3">
@@ -747,7 +747,7 @@ export default function HomePage() {
                         </div>
 
                         {/* Additional Notes */}
-                        <div>
+                        <div className="bg-valorant-dark/30 rounded-xl p-6 border border-valorant-gray/20">
                           <label className="block text-sm font-semibold text-white mb-3">
                             Additional Notes (Optional)
                           </label>
@@ -762,7 +762,7 @@ export default function HomePage() {
                       </div>
 
                       {/* Duration (TTL) and Action Buttons */}
-                      <div className="flex gap-4 pt-6">
+                      <div className="flex flex-col md:flex-row md:items-center gap-4 pt-6 justify-between">
                         <div className="flex items-center gap-3">
                           <label className="text-sm font-semibold text-white">Active For</label>
                           <select
@@ -775,20 +775,22 @@ export default function HomePage() {
                             ))}
                           </select>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab('browse')}
-                          className="flex-1 py-3 px-6 bg-valorant-dark/50 border border-valorant-gray/30 text-valorant-light rounded-lg hover:bg-valorant-dark transition-all font-semibold"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          className="flex-1 py-3 px-6 bg-valorant-red text-white rounded-lg hover:bg-valorant-red/80 transition-all font-semibold text-lg shadow-lg hover:shadow-xl"
-                        >
-                          <Users className="w-5 h-5 mr-2 inline" />
-                          Create Party
-                        </button>
+                        <div className="flex-1 flex gap-4 md:justify-end">
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab('browse')}
+                            className="w-full md:w-auto py-3 px-6 bg-valorant-dark/50 border border-valorant-gray/30 text-valorant-light rounded-lg hover:bg-valorant-dark transition-all font-semibold"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            className="w-full md:w-auto py-3 px-6 bg-valorant-red text-white rounded-lg hover:bg-valorant-red/80 transition-all font-semibold text-lg shadow-lg hover:shadow-xl"
+                          >
+                            <Users className="w-5 h-5 mr-2 inline" />
+                            Create Party
+                          </button>
+                        </div>
         </div>
                     </form>
                   </div>
