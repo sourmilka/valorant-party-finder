@@ -66,10 +66,10 @@ export default function HomePage() {
 
   const [lfgForm, setLfgForm] = useState<CreateLFGData>({
     username: '',
-    server: 'Chicago, IL (USA)',
-    rank: 'Gold 1',
+    server: '',
+    rank: '',
     playstyle: [],
-    availability: 'Now',
+    availability: '',
     description: '',
     tags: []
   });
@@ -174,6 +174,7 @@ export default function HomePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...lfgForm,
+          username: riotName && riotTag ? `${riotName}#${riotTag}` : lfgForm.username,
           inGameName: riotName && riotTag ? `${riotName}#${riotTag}` : ''
         })
       });
@@ -184,10 +185,10 @@ export default function HomePage() {
         // Reset form
         setLfgForm({
           username: '',
-          server: 'Chicago, IL (USA)',
-          rank: 'Gold 1',
+          server: '',
+          rank: '',
           playstyle: [],
-          availability: 'Now',
+          availability: '',
           description: '',
           tags: []
         });
@@ -871,95 +872,86 @@ export default function HomePage() {
                         <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
                           <UserPlus className="w-5 h-5 mr-2 text-valorant-red" />
                           Player Information
-                </h3>
-                        
+                        </h3>
+                        {/* Row 1: Riot ID split + Rank */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
-                            <label className="block text-sm font-medium text-valorant-light mb-2">
-                              Riot ID / Username
-                            </label>
-                            <input
-                              type="text"
-                              value={lfgForm.username}
-                              onChange={(e) => setLfgForm({...lfgForm, username: e.target.value})}
-                              placeholder="Your Riot ID (e.g., PlayerName#1234)"
-                              className="w-full px-4 py-3 bg-valorant-dark border border-valorant-gray/20 rounded-lg text-white focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
-                              required
-                            />
-                            <p className="text-xs text-valorant-light/60 mt-1">
-                              Your full Riot ID that others will use to add you
-                            </p>
+                            <label className="block text-sm font-medium text-valorant-light mb-2">Your In-Game Name</label>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={riotName}
+                                onChange={(e) => setRiotName(e.target.value)}
+                                placeholder="Name"
+                                className="w-full px-4 py-3 bg-valorant-dark/50 border border-valorant-gray/30 rounded-lg text-white placeholder-valorant-light/50 focus:outline-none focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
+                              />
+                              <span className="px-3 py-3 bg-valorant-dark/60 border border-valorant-gray/30 rounded-lg text-valorant-light/70">#</span>
+                              <input
+                                type="text"
+                                value={riotTag}
+                                onChange={(e) => setRiotTag(e.target.value)}
+                                placeholder="Tag"
+                                className="w-32 px-4 py-3 bg-valorant-dark/50 border border-valorant-gray/30 rounded-lg text-white placeholder-valorant-light/50 focus:outline-none focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
+                              />
+                            </div>
                           </div>
-
                           <div>
-                            <label className="block text-sm font-medium text-valorant-light mb-2">
-                              Server
-                            </label>
+                            <label className="block text-sm font-medium text-valorant-light mb-2">Your Rank</label>
+                            <div className="relative">
+                              <select
+                                value={lfgForm.rank}
+                                onChange={(e) => setLfgForm({ ...lfgForm, rank: e.target.value })}
+                                className="w-full px-4 py-3 bg-valorant-dark border border-valorant-gray/20 rounded-lg text-white focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
+                              >
+                                <option value="" disabled>Select rank…</option>
+                                {allRanks.map((rank) => (
+                                  <option key={rank} value={rank}>{rank}</option>
+                                ))}
+                              </select>
+                              {lfgForm.rank && (
+                                <div className="absolute right-3 top-3 w-6 h-6">
+                                  <Image src={getRankImage(lfgForm.rank)} alt={lfgForm.rank} fill sizes="24px" className="object-contain" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Row 2: Server + Availability */}
+                        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-valorant-light mb-2">Server Location</label>
                             <select
                               value={lfgForm.server}
-                              onChange={(e) => setLfgForm({...lfgForm, server: e.target.value})}
+                              onChange={(e) => setLfgForm({ ...lfgForm, server: e.target.value })}
                               className="w-full px-4 py-3 bg-valorant-dark border border-valorant-gray/20 rounded-lg text-white focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
                             >
+                              <option value="" disabled>Select server…</option>
                               {Object.entries(serverOptions).map(([region, servers]) => (
                                 <optgroup key={region} label={region}>
-                                  {servers.map(server => (
+                                  {servers.map((server) => (
                                     <option key={server} value={server}>{server}</option>
                                   ))}
                                 </optgroup>
                               ))}
                             </select>
-                            <p className="text-xs text-valorant-light/60 mt-1">
-                              Select your specific server for optimal ping
-                            </p>
-                </div>
-
-                          {/* In-Game Name Input for LFG */}
-                          <div>
-                            <label className="block text-sm font-medium text-valorant-light mb-2">
-                              Your In-Game Name
-                            </label>
-                            <input
-                              type="text"
-                              placeholder="Enter: YourName#Tag (e.g., Tardic#6969)"
-                              value={riotName}
-                              onChange={(e) => setRiotName(e.target.value)}
-                              className="w-full px-4 py-3 bg-valorant-dark/50 border border-valorant-gray/30 rounded-lg text-white placeholder-valorant-light/50 focus:outline-none focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
-                            />
-                            <p className="mt-2 text-sm text-valorant-light/60">
-                              💡 Enter your Valorant in-game name (e.g., Tardic#6969)
-                            </p>
                           </div>
-
                           <div>
-                            <label className="block text-sm font-medium text-valorant-light mb-2">
-                              Rank
-                            </label>
-                            <div className="relative">
-                              <select
-                                value={lfgForm.rank}
-                                onChange={(e) => setLfgForm({...lfgForm, rank: e.target.value})}
-                                className="w-full px-4 py-3 bg-valorant-dark border border-valorant-gray/20 rounded-lg text-white focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
-                              >
-                                {allRanks.map(rank => (
-                                  <option key={rank} value={rank}>{rank}</option>
-                                ))}
-                              </select>
-                              <div className="absolute right-3 top-3 w-6 h-6">
-                                <Image
-                                  src={getRankImage(lfgForm.rank)}
-                                  alt={lfgForm.rank}
-                                  fill
-                                  sizes="24px"
-                                  className="object-contain"
-                                />
-          </div>
-        </div>
-                            <p className="text-xs text-valorant-light/60 mt-1">
-                              Your current rank for skill-based matching
-                            </p>
+                            <label className="block text-sm font-medium text-valorant-light mb-2">Availability</label>
+                            <select
+                              value={lfgForm.availability}
+                              onChange={(e) => setLfgForm({ ...lfgForm, availability: e.target.value })}
+                              className="w-full px-4 py-3 bg-valorant-dark border border-valorant-gray/20 rounded-lg text-white focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
+                            >
+                              <option value="" disabled>Select availability…</option>
+                              <option value="Now">Now</option>
+                              <option value="Tonight">Tonight</option>
+                              <option value="This Week">This Week</option>
+                              <option value="Weekend">Weekend</option>
+                            </select>
                           </div>
-          </div>
-        </div>
+                        </div>
+                      </div>
 
                       {/* Availability & Playstyle */}
                       <div className="bg-valorant-dark/30 rounded-xl p-6 border border-valorant-gray/20">
@@ -969,24 +961,7 @@ export default function HomePage() {
                 </h3>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <label className="block text-sm font-medium text-valorant-light mb-2">
-                              When are you available?
-                            </label>
-                            <select
-                              value={lfgForm.availability}
-                              onChange={(e) => setLfgForm({...lfgForm, availability: e.target.value})}
-                              className="w-full px-4 py-3 bg-valorant-dark border border-valorant-gray/20 rounded-lg text-white focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
-                            >
-                              <option value="Now">Now (Ready to play)</option>
-                              <option value="Tonight">Tonight (Later today)</option>
-                              <option value="This Week">This Week (Flexible)</option>
-                              <option value="Weekend">Weekend (Sat/Sun)</option>
-                            </select>
-                            <p className="text-xs text-valorant-light/60 mt-1">
-                              When you're looking to play
-                            </p>
-                          </div>
+                        {/* Compact alignment: remove duplicate Availability (now in Player Information) */}
 
                           <div>
                             <label className="block text-sm font-medium text-valorant-light mb-2">
@@ -1020,9 +995,7 @@ export default function HomePage() {
                                 </button>
             ))}
           </div>
-                            <p className="text-xs text-valorant-light/60 mt-2">
-                              💡 Select your preferred roles (you can choose multiple)
-                            </p>
+                            {/* Helper text removed to match Create Party minimalism */}
         </div>
                         </div>
                       </div>
@@ -1044,9 +1017,7 @@ export default function HomePage() {
                             rows={4}
                             className="w-full px-4 py-3 bg-valorant-dark border border-valorant-gray/20 rounded-lg text-white focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all resize-none"
                           />
-                          <p className="text-xs text-valorant-light/60 mt-2">
-                            💬 Help parties understand if you're a good fit for their team
-                          </p>
+                          {/* Helper text removed for visual consistency */}
                         </div>
                       </div>
 
@@ -1388,5 +1359,4 @@ function LFGCard({ lfg, onCopy, copied }: { lfg: LFGRequest; onCopy: (text: stri
       </div>
     </motion.div>
   );
-}
 }
