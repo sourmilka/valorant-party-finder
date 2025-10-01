@@ -1,33 +1,32 @@
 # Valorant LFG / Party Finder
 
-A polished Next.js 14 app to create and browse Valorant parties and LFG posts with a clean Valorant-inspired UI. It supports MongoDB via Mongoose, JWT auth, and responsive UX with Tailwind.
+Professional Next.js 14 application to create and browse Valorant Parties and LFG posts with a modern Valorant-inspired UI/UX. Backed by MongoDB (Mongoose), hardened API routes, rate limiting, TTL auto-expiry, and Vercel Analytics.
 
 ## 🎮 Features Implemented
 
 ### ✅ Core Features
-- **Authentication**: JWT-based register/login
-- **Party Management**: Create, browse, and share party codes
-- **LFG System**: Post LFG with playstyles and availability
-- **Live Feed**: Fresh posts with client-side refresh
-- **Filtering**: Rank, server, mode, and sort options
-- **Responsive UI**: Tailwind + Framer Motion animations
+- **Create Party**: Valorant-styled form with Riot ID split (name + #tag), rank preview, time-to-live selector, code paste, Discord link, and compact requirements
+- **Post LFG**: Matching form design (Riot ID split, rank preview, server + availability, playstyle chips, preferences)
+- **Activity Feed**: Redesigned Party and LFG cards (rank badge, hero code/username, info grids, agents/roles, tags, time-left)
+- **Responsive UI**: Tailwind + Framer Motion with consistent spacing, alignment, and accessibility
+- **Copy & Actions**: One-click copy for party code and username with visual feedback
 
-### ✅ Pages Created
-- **Landing Page**: Hero section with live feeds and statistics
-- **Browse Parties**: Advanced filtering and search functionality
-- **Create Party**: Form-based party creation with validation
-- **Authentication**: Login and registration pages
-- **User Dashboard**: (Coming next)
+### ✅ Highlights & UX
+- Valorant-inspired color system and typography
+- Full-width empty state with contextual iconography
+- Loading states on form submits; disabled buttons prevent double-submit
+- ARIA labels and aria-pressed on interactive chips/buttons
+- Image fallbacks for roles without assets (no 400 image errors)
 
 ### ✅ Technical Implementation
-- **Next.js 14** with App Router
-- **TypeScript** for type safety
-- **MongoDB** with Mongoose for database
-- **Tailwind CSS** with custom Valorant theme
-- **Framer Motion** for animations
-- **React Hook Form** with Zod validation
-- **Real-time features** with Socket.io
-- **Professional UI/UX** with Valorant color scheme
+- **Next.js 14 App Router** + TypeScript
+- **MongoDB + Mongoose** with hardened connection (timeouts, pooling)
+- **TTL Auto-Expiry** via TTL index on `expiresAt` (Party & LFG)
+- **Indexes** on `createdAt`, `status`, and common filters for faster reads
+- **Rate limiting** per userId/IP for create endpoints
+- **Security headers** (Referrer-Policy, X-Content-Type-Options, X-Frame-Options) in middleware
+- **Tailwind CSS** with custom Valorant theme + Framer Motion animations
+- **Vercel Analytics** integrated via `<Analytics />`
 
 ## 🚀 Getting Started
 
@@ -83,22 +82,21 @@ A polished Next.js 14 app to create and browse Valorant parties and LFG posts wi
 ## 📱 Pages Overview
 
 ### Landing Page (`/`)
-- Hero section with Valorant branding
-- Live feeds of recent parties and LFG requests
-- Statistics and feature highlights
-- Call-to-action buttons
+- Live Activity (Parties + LFG) with redesigned vertical cards and empty state
+- Tabs for Browse / Create Party / Post LFG
 
-### Browse Parties (`/parties`)
-- Grid layout of party cards
-- Advanced filtering system
-- Real-time search and sorting
-- Load more functionality
+### Create Party (tab)
+- Riot ID split input (`name` + `#tag`), rank selector with image preview
+- Server, mode, party size, Discord link (discord.gg/*) validation
+- Code field with Paste-from-clipboard helper
+- "Active For" time chips (with 45 min) → sets TTL
+- Compact Player Requirements, Looking For roles with icons, Preferred Agents grid
 
-### Create Party (`/create-party`)
-- Multi-step form with validation
-- Party code generation
-- Tag system for categorization
-- Tips and guidance sidebar
+### Post LFG (tab)
+- Matching layout to Create Party: IGN + Rank, Server + Availability
+- Playstyle chips (Entry, Support, IGL, Fragger, Flex)
+- Player Preferences selector (chips)
+- Submit disabled until required fields set; loading state
 
 ### Authentication (`/auth/login`, `/auth/register`)
 - Clean, modern login/register forms
@@ -153,19 +151,21 @@ A polished Next.js 14 app to create and browse Valorant parties and LFG posts wi
 }
 ```
 
-## 🔧 API Endpoints
+## 🔧 API Endpoints (App Router)
 
 ### Authentication
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
 
 ### Parties
-- `GET /api/parties` - Get parties with filtering
+- `GET /api/parties` - List parties (sorted by `createdAt`)
 - `POST /api/parties` - Create new party
+  - Validates fields, clamps duration (5–120 min), enforces rate limits
 
 ### LFG Requests
-- `GET /api/lfg` - Get LFG requests with filtering
+- `GET /api/lfg` - List LFG posts (sorted by `createdAt`)
 - `POST /api/lfg` - Create new LFG request
+  - Validates fields and trims/normalizes inputs
 
 ## 🎯 Features from Project Specification
 
@@ -204,15 +204,13 @@ npm run dev          # Start development server
 npm run build        # Build for production
 npm run start        # Start production server
 npm run lint         # Run ESLint
-npm test            # Run tests
+# npm test           # (optional) Run tests
 ```
 
-### Project Structure
+### Project Structure (simplified)
 ```
 ├── app/                    # Next.js App Router
 │   ├── api/                # API routes
-│   ├── auth/               # Authentication pages
-│   ├── parties/            # Party-related pages
 │   └── globals.css         # Global styles
 ├── components/             # React components
 ├── lib/                    # Utility functions
@@ -224,9 +222,10 @@ npm test            # Run tests
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
-1. Connect your GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
+1. Connect GitHub repo to Vercel
+2. Set env vars in Vercel: `MONGODB_URI`, `JWT_SECRET`, `NEXTAUTH_URL`
+3. Push to `master` → auto-deploy
+4. Analytics visible in Vercel dashboard (navigate your site to collect data)
 
 ### Other Platforms
 - **Netlify**: Static site deployment
