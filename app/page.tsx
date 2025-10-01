@@ -49,6 +49,12 @@ export default function HomePage() {
   const [showFilters, setShowFilters] = useState(false);
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
   
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [itemsPerPage] = useState(12); // Show 12 items per page
+  
   // Filter states
   const [filters, setFilters] = useState({
     rank: '',
@@ -97,26 +103,102 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
-  const fetchRecentPosts = async () => {
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+    fetchRecentPosts(1);
+  }, [filters]);
+
+  const fetchRecentPosts = async (page: number = currentPage) => {
     try {
+      setLoading(true);
+      
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: itemsPerPage.toString(),
+      });
+
+      // Add filters to query params
+      if (filters.rank) params.append('rank', filters.rank);
+      if (filters.server) params.append('server', filters.server);
+      if (filters.mode) params.append('mode', filters.mode);
+
       const [partiesResponse, lfgResponse] = await Promise.all([
-        fetch('/api/parties?limit=10'),
-        fetch('/api/lfg?limit=10')
+        fetch(`/api/parties?${params.toString()}`),
+        fetch(`/api/lfg?${params.toString()}`)
       ]);
 
+      let allParties: PartyInvite[] = [];
+      let allLFG: LFGRequest[] = [];
+      let totalParties = 0;
+      let totalLFG = 0;
+
       if (partiesResponse.ok) {
-      const partiesData = await partiesResponse.json();
-      if (partiesData.success) {
-        setRecentParties(partiesData.data.parties);
+        const partiesData = await partiesResponse.json();
+        if (partiesData.success) {
+          allParties = partiesData.data.parties;
+          totalParties = partiesData.data.pagination.total;
         }
       }
 
       if (lfgResponse.ok) {
         const lfgData = await lfgResponse.json();
-      if (lfgData.success) {
-        setRecentLFG(lfgData.data.lfgRequests);
+        if (lfgData.success) {
+          allLFG = lfgData.data.lfgRequests;
+          totalLFG = lfgData.data.pagination.total;
         }
       }
+
+      // Combine and sort by creation time
+      const allPosts = [...allParties, ...allLFG].sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      // Apply client-side filters
+      const filteredPosts = allPosts.filter(post => {
+        // Type filter
+        if (filters.type === 'parties' && !('code' in post)) return false;
+        if (filters.type === 'lfg' && 'code' in post) return false;
+
+        // Time left filter
+        if (filters.timeLeft) {
+          const now = new Date();
+          const expiresAt = new Date(post.expiresAt);
+          const timeLeft = expiresAt.getTime() - now.getTime();
+          const minutesLeft = Math.ceil(timeLeft / (1000 * 60));
+          
+          switch (filters.timeLeft) {
+            case '5min':
+              if (minutesLeft > 5) return false;
+              break;
+            case '15min':
+              if (minutesLeft > 15) return false;
+              break;
+            case '30min':
+              if (minutesLeft > 30) return false;
+              break;
+            case '1hour':
+              if (minutesLeft > 60) return false;
+              break;
+          }
+        }
+
+        return true;
+      });
+
+      // Split back into parties and LFG
+      const filteredParties = filteredPosts.filter(post => 'code' in post) as PartyInvite[];
+      const filteredLFG = filteredPosts.filter(post => !('code' in post)) as LFGRequest[];
+
+      setRecentParties(filteredParties);
+      setRecentLFG(filteredLFG);
+      
+      // Update pagination info
+      const totalFiltered = filteredPosts.length;
+      setTotalItems(totalFiltered);
+      setTotalPages(Math.ceil(totalFiltered / itemsPerPage));
+      
     } catch (error) {
       console.error('Error fetching recent posts:', error);
       // Set empty arrays on error so the UI can still render
@@ -439,7 +521,7 @@ export default function HomePage() {
               </div>
 
                   <div className="text-valorant-light/60 text-sm">
-                    {loading ? 'Loading...' : `${filteredData().length} active ${filters.type === 'all' ? 'posts' : filters.type}`}
+                    {loading ? 'Loading...' : `${totalItems} active ${filters.type === 'all' ? 'posts' : filters.type}`}
               </div>
               
               <button
@@ -583,8 +665,10 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-                  ) : filteredData().length > 0 ? (
-                    filteredData().map((item) => (
+                  ) : (recentParties.length > 0 || recentLFG.length > 0) ? (
+                    [...recentParties, ...recentLFG].sort((a, b) => 
+                      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                    ).map((item) => (
                       'code' in item ? (
                         <PartyCard key={item._id} party={item} onCopy={handleCopy} copied={copiedItem === item._id} />
                       ) : (
@@ -607,6 +691,67 @@ export default function HomePage() {
                   </div>
                 )}
               </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center space-x-2 mt-8">
+                  <button
+                    onClick={() => {
+                      const newPage = Math.max(1, currentPage - 1);
+                      setCurrentPage(newPage);
+                      fetchRecentPosts(newPage);
+                    }}
+                    disabled={currentPage === 1 || loading}
+                    className="px-4 py-2 bg-valorant-dark/50 border border-valorant-gray/30 text-valorant-light rounded-lg hover:bg-valorant-dark transition-all focus:outline-none focus:ring-2 focus:ring-valorant-red/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const pageNum = i + 1;
+                      const isActive = pageNum === currentPage;
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => {
+                            setCurrentPage(pageNum);
+                            fetchRecentPosts(pageNum);
+                          }}
+                          disabled={loading}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-valorant-red/50 ${
+                            isActive
+                              ? 'bg-valorant-red text-white'
+                              : 'bg-valorant-dark/50 border border-valorant-gray/30 text-valorant-light hover:bg-valorant-dark'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      const newPage = Math.min(totalPages, currentPage + 1);
+                      setCurrentPage(newPage);
+                      fetchRecentPosts(newPage);
+                    }}
+                    disabled={currentPage === totalPages || loading}
+                    className="px-4 py-2 bg-valorant-dark/50 border border-valorant-gray/30 text-valorant-light rounded-lg hover:bg-valorant-dark transition-all focus:outline-none focus:ring-2 focus:ring-valorant-red/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+
+              {/* Pagination Info */}
+              {totalItems > 0 && (
+                <div className="text-center mt-4 text-valorant-light/60 text-sm">
+                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} posts
+                </div>
+              )}
               </motion.div>
             )}
 
@@ -639,16 +784,6 @@ export default function HomePage() {
                       onSubmit={handleCreateParty} 
                       isCreating={isCreatingParty}
                     />
-                                      {m.label !== m.key && (
-                                        <span className={`text-[10px] sm:text-[11px] uppercase tracking-widest ${isActive ? 'text-valorant-red' : 'text-valorant-light/50'}`}>{m.key}</span>
-                                      )}
-                          </div>
-                                  </button>
-                                    );
-                                  })}
-                            </div>
-                          </div>
-                    </div>
 
                         {/* Identity Row: Your In-Game Name — Your Rank */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 items-start">
