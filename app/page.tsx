@@ -1162,7 +1162,7 @@ function PartyCard({ party, onCopy, copied }: { party: PartyInvite; onCopy: (tex
           <div className="font-mono text-3xl tracking-[0.3em] text-white font-bold">{party.code}</div>
           <div className="mt-3 flex justify-center gap-2">
             {!isExpired && (
-              <button onClick={() => onCopy(party.code, party._id)} disabled={copied} className="px-4 py-1.5 bg-valorant-red/20 hover:bg-valorant-red/30 border border-valorant-red/50 rounded-lg text-white text-xs font-semibold transition-all">
+              <button onClick={() => onCopy(party.code, party._id)} disabled={copied} className="px-4 py-1.5 bg-valorant-red/20 hover:bg-valorant-red/30 border border-valorant-red/50 rounded-lg text-white text-xs font-semibold transition-all" aria-label={`Copy party code ${party.code}`}>
                 {copied ? '✓ Copied' : 'Copy Code'}
               </button>
             )}
@@ -1332,7 +1332,7 @@ function LFGCard({ lfg, onCopy, copied }: { lfg: LFGRequest; onCopy: (text: stri
           <div className="font-mono text-2xl tracking-wider text-white font-bold">{lfg.username}</div>
           <div className="mt-3 flex justify-center gap-2">
             {!isExpired && (
-              <button onClick={() => onCopy(lfg.username, lfg._id)} disabled={copied} className="px-4 py-1.5 bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/50 rounded-lg text-white text-xs font-semibold transition-all">
+              <button onClick={() => onCopy(lfg.username, lfg._id)} disabled={copied} className="px-4 py-1.5 bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/50 rounded-lg text-white text-xs font-semibold transition-all" aria-label={`Copy player id ${lfg.username}`}>
                 {copied ? '✓ Copied' : 'Copy ID'}
               </button>
             )}
