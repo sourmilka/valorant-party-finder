@@ -411,7 +411,7 @@ export default function HomePage() {
                       )
                     ))
                   ) : (
-                    <div className="w-full text-center py-16 px-6 rounded-2xl border border-valorant-gray/20 bg-gradient-to-b from-black/20 to-transparent">
+                    <div className="col-span-1 md:col-span-2 xl:col-span-4 w-full text-center py-16 px-6 rounded-2xl border border-valorant-gray/20 bg-gradient-to-b from-black/20 to-transparent">
                       <div className="text-valorant-light/60 mb-6">
                         {activeFilter === 'all' && <Search className="w-16 h-16 mx-auto mb-4" />}
                         {activeFilter === 'parties' && <Users className="w-16 h-16 mx-auto mb-4" />}
