@@ -218,6 +218,29 @@ export default function HomePage() {
     { key: 'Premier', label: 'Premier', icon: '/gamemode/Premier.webp' },
   ];
 
+  // Common tag options for LFG (mirrors Create Party vibe)
+  const lfgTagOptions: string[] = [
+    'Mic Required',
+    '18+',
+    'Chill',
+    'Competitive',
+    'Learning',
+    'Fun',
+    'Serious',
+    'Beginner Friendly',
+    'No Toxicity',
+    'English Speaking',
+    'Team Communication'
+  ];
+
+  const isLfgFormValid = (
+    riotName.trim().length > 0 &&
+    riotTag.trim().length > 0 &&
+    lfgForm.rank.trim().length > 0 &&
+    lfgForm.server.trim().length > 0 &&
+    lfgForm.availability.trim().length > 0
+  );
+
   return (
     <div className="min-h-screen bg-valorant-dark relative overflow-hidden">
       {/* Enhanced Background */}
@@ -1017,7 +1040,39 @@ export default function HomePage() {
                             rows={4}
                             className="w-full px-4 py-3 bg-valorant-dark border border-valorant-gray/20 rounded-lg text-white focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all resize-none"
                           />
-                          {/* Helper text removed for visual consistency */}
+                          <div className="flex items-center justify-between text-xs text-valorant-light/50 mt-2">
+                            <span>{lfgForm.description.length}/300</span>
+                            <span>{lfgForm.playstyle.length} playstyle selected</span>
+                          </div>
+                        </div>
+
+                        {/* Tags Selector */}
+                        <div className="mt-6">
+                          <label className="block text-sm font-medium text-valorant-light mb-2">Player Preferences</label>
+                          <div className="flex flex-wrap gap-2">
+                            {lfgTagOptions.map((t) => {
+                              const active = lfgForm.tags.includes(t);
+                              return (
+                                <button
+                                  key={t}
+                                  type="button"
+                                  onClick={() => {
+                                    const tags = active
+                                      ? lfgForm.tags.filter((x) => x !== t)
+                                      : [...lfgForm.tags, t];
+                                    setLfgForm({ ...lfgForm, tags });
+                                  }}
+                                  className={`px-3 py-1.5 rounded-lg border text-xs transition-all ${
+                                    active
+                                      ? 'bg-valorant-red/20 border-valorant-red/50 text-white'
+                                      : 'bg-valorant-dark border-valorant-gray/30 text-valorant-light hover:bg-valorant-gray/20'
+                                  }`}
+                                >
+                                  {t}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
 
@@ -1032,7 +1087,12 @@ export default function HomePage() {
                         </button>
                         <button
                           type="submit"
-                          className="flex-1 px-6 py-4 bg-valorant-red text-white rounded-lg hover:bg-valorant-red/80 transition-all font-medium text-lg shadow-lg hover:shadow-xl"
+                          disabled={!isLfgFormValid}
+                          className={`flex-1 px-6 py-4 rounded-lg transition-all font-medium text-lg shadow-lg hover:shadow-xl ${
+                            isLfgFormValid
+                              ? 'bg-valorant-red text-white hover:bg-valorant-red/80'
+                              : 'bg-valorant-dark text-valorant-light/50 border border-valorant-gray/30 cursor-not-allowed'
+                          }`}
                         >
                           <UserPlus className="w-5 h-5 mr-2 inline" />
                           Post LFG Request
