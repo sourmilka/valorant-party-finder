@@ -1,3 +1,5 @@
+import { RANKS } from './constants';
+
 // Helper function to map rank names to image files
 export const getRankImage = (rank: string): string => {
   // Convert rank string to the format used in image files
@@ -45,4 +47,4 @@ export const rankTiers = {
   'Radiant': ['Radiant']
 };
 
-export const allRanks = Object.values(rankTiers).flat();
+export const allRanks = RANKS;

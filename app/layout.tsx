@@ -97,6 +97,8 @@ export default function RootLayout({
             },
           }}
         />
+        {/* Screen reader announcements */}
+        <div id="toast-announcements" aria-live="polite" aria-atomic="true" className="sr-only"></div>
         <Analytics />
       </body>
     </html>

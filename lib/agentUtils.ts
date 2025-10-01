@@ -1,3 +1,5 @@
+import { ROLES, AGENTS, AGENT_ROLES } from './constants';
+
 // Valorant agent roles and agents
 export const agentRoles = {
   'Duelist': {
@@ -37,20 +39,15 @@ export const agentRoles = {
   }
 };
 
-export const agents = {
-  'Duelist': [
-    'Jett', 'Raze', 'Phoenix', 'Reyna', 'Yoru', 'Neon', 'Iso'
-  ],
-  'Initiator': [
-    'Sova', 'Breach', 'Skye', 'KAYO', 'Fade', 'Gekko'
-  ],
-  'Controller': [
-    'Omen', 'Viper', 'Brimstone', 'Astra', 'Harbor', 'Clove'
-  ],
-  'Sentinel': [
-    'Sage', 'Cypher', 'Killjoy', 'Chamber', 'Deadlock'
-  ]
-};
+// Generate agents object from constants
+export const agents = ROLES.reduce((acc, role) => {
+  if (role === 'Flexible') {
+    acc[role] = AGENTS; // Flexible can play any agent
+  } else {
+    acc[role] = AGENTS.filter(agent => AGENT_ROLES[agent] === role);
+  }
+  return acc;
+}, {} as Record<string, string[]>);
 
 // Agent image mapping
 export const getAgentImage = (agentName: string): string => {
@@ -85,12 +82,7 @@ export const getAllAgents = (): string[] => {
 
 // Get agent role
 export const getAgentRole = (agentName: string): string | null => {
-  for (const [role, agentList] of Object.entries(agents)) {
-    if (agentList.includes(agentName)) {
-      return role;
-    }
-  }
-  return null;
+  return AGENT_ROLES[agentName] || null;
 };
 
 // Get agents by role
@@ -100,7 +92,7 @@ export const getAgentsByRole = (role: string): string[] => {
 
 // Get all roles
 export const getAllRoles = (): string[] => {
-  return Object.keys(agentRoles);
+  return ROLES;
 };
 
 // Get role info

@@ -30,10 +30,15 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { PartyInvite, LFGRequest, CreatePartyData, CreateLFGData } from '@/types';
+import PartyCard from '@/components/PartyCard';
+import LFGCard from '@/components/LFGCard';
+import CreatePartyForm from '@/components/CreatePartyForm';
+import CreateLFGForm from '@/components/CreateLFGForm';
 import { getRankImage, allRanks } from '@/lib/rankUtils';
 import { serverOptions, allServers } from '@/lib/serverUtils';
 import { getMockPing, getPingColor, getPingStatus } from '@/lib/pingUtils';
 import { agentRoles, agents, getAgentsByRole, getAllRoles, getRoleInfo, getAgentImage, getAllAgents, getAgentRole } from '@/lib/agentUtils';
+import { GAME_MODES, PARTY_SIZES, PLAYSTYLES, AVAILABILITY_OPTIONS, DURATION_OPTIONS, REQUIREMENT_TAGS, PREFERENCE_TAGS } from '@/lib/constants';
 
 export default function HomePage() {
   const [recentParties, setRecentParties] = useState<PartyInvite[]>([]);
@@ -43,6 +48,15 @@ export default function HomePage() {
   const [activeFilter, setActiveFilter] = useState<'all' | 'parties' | 'lfg'>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
+  
+  // Filter states
+  const [filters, setFilters] = useState({
+    rank: '',
+    server: '',
+    mode: '',
+    timeLeft: '',
+    type: 'all' // 'all', 'parties', 'lfg'
+  });
 
   // In-game name state
   const [riotName, setRiotName] = useState('');
@@ -214,9 +228,55 @@ export default function HomePage() {
   };
 
   const filteredData = () => {
-    if (activeFilter === 'parties') return recentParties;
-    if (activeFilter === 'lfg') return recentLFG;
-    return [...recentParties, ...recentLFG].sort((a, b) => 
+    let allData = [...recentParties, ...recentLFG];
+    
+    // Apply type filter
+    if (filters.type === 'parties') allData = recentParties;
+    else if (filters.type === 'lfg') allData = recentLFG;
+    
+    // Apply other filters
+    return allData.filter((item) => {
+      // Rank filter
+      if (filters.rank && item.rank !== filters.rank) return false;
+      
+      // Server filter
+      if (filters.server && item.server !== filters.server) return false;
+      
+      // Mode filter (only for parties)
+      if (filters.mode && 'mode' in item && item.mode !== filters.mode) return false;
+      
+      // Time left filter
+      if (filters.timeLeft) {
+        const now = new Date();
+        const expiresAt = new Date(item.expiresAt);
+        const timeLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60)); // minutes
+        
+        switch (filters.timeLeft) {
+          case 'expired':
+            return timeLeft <= 0;
+          case '5min':
+            return timeLeft > 0 && timeLeft <= 5;
+          case '15min':
+            return timeLeft > 5 && timeLeft <= 15;
+          case '30min':
+            return timeLeft > 15 && timeLeft <= 30;
+          case '1hour':
+            return timeLeft > 30 && timeLeft <= 60;
+          case '2hours':
+            return timeLeft > 60 && timeLeft <= 120;
+          case '4hours':
+            return timeLeft > 120 && timeLeft <= 240;
+          case '8hours':
+            return timeLeft > 240 && timeLeft <= 480;
+          case '24hours':
+            return timeLeft > 480 && timeLeft <= 1440;
+          default:
+            return true;
+        }
+      }
+      
+      return true;
+    }).sort((a, b) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   };
@@ -224,22 +284,15 @@ export default function HomePage() {
   const gameModes: { key: string; label: string; icon: string }[] = [
     { key: 'Ranked', label: 'Competitive', icon: '/gamemode/Competetrive.webp' },
     { key: 'Premier', label: 'Premier', icon: '/gamemode/Premier.webp' },
-  ];
+    { key: 'Unrated', label: 'Unrated', icon: '/gamemode/Unrated.webp' },
+    { key: 'Spike Rush', label: 'Spike Rush', icon: '/gamemode/SpikeRush.webp' },
+    { key: 'Deathmatch', label: 'Deathmatch', icon: '/gamemode/Deathmatch.webp' },
+    { key: 'Escalation', label: 'Escalation', icon: '/gamemode/Escalation.webp' },
+    { key: 'Replication', label: 'Replication', icon: '/gamemode/Replication.webp' }
+  ].filter(mode => GAME_MODES.includes(mode.key as any));
 
   // Common tag options for LFG (mirrors Create Party vibe)
-  const lfgTagOptions: string[] = [
-    'Mic Required',
-    '18+',
-    'Chill',
-    'Competitive',
-    'Learning',
-    'Fun',
-    'Serious',
-    'Beginner Friendly',
-    'No Toxicity',
-    'English Speaking',
-    'Team Communication'
-  ];
+  const lfgTagOptions: string[] = [...PREFERENCE_TAGS];
 
   const isLfgFormValid = (
     riotName.trim().length > 0 &&
@@ -256,6 +309,13 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-valorant-dark relative overflow-hidden">
+      {/* Skip to content link for accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-valorant-red focus:text-white focus:rounded-lg focus:font-semibold focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-valorant-red/50"
+      >
+        Skip to main content
+      </a>
       {/* Enhanced Background */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-br from-valorant-red/5 via-transparent to-valorant-blue/10" />
@@ -280,7 +340,7 @@ export default function HomePage() {
               <div className="flex bg-valorant-dark/50 rounded-xl p-1 border border-valorant-gray/20">
                 <button
                   onClick={() => setActiveTab('browse')}
-                  className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-6 py-2 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-valorant-red/50 ${
                     activeTab === 'browse'
                       ? 'bg-valorant-red text-white shadow-lg'
                       : 'text-valorant-light/60 hover:text-white hover:bg-valorant-dark/30'
@@ -291,7 +351,7 @@ export default function HomePage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('create-party')}
-                  className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-6 py-2 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-valorant-red/50 ${
                     activeTab === 'create-party'
                       ? 'bg-valorant-red text-white shadow-lg'
                       : 'text-valorant-light/60 hover:text-white hover:bg-valorant-dark/30'
@@ -306,7 +366,7 @@ export default function HomePage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('create-lfg')}
-                  className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-6 py-2 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-valorant-red/50 ${
                     activeTab === 'create-lfg'
                       ? 'bg-valorant-red text-white shadow-lg'
                       : 'text-valorant-light/60 hover:text-white hover:bg-valorant-dark/30'
@@ -320,7 +380,7 @@ export default function HomePage() {
               <div className="flex items-center space-x-3">
                 <button
                   onClick={fetchRecentPosts}
-                  className="p-2 text-valorant-light/60 hover:text-white hover:bg-valorant-dark/30 rounded-lg transition-all"
+                  className="p-2 text-valorant-light/60 hover:text-white hover:bg-valorant-dark/30 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-valorant-red/50"
                   disabled={loading}
                 >
                   <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
@@ -331,7 +391,7 @@ export default function HomePage() {
         </header>
 
         {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <AnimatePresence mode="wait">
             {activeTab === 'browse' && (
           <motion.div
@@ -345,9 +405,9 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex bg-valorant-dark/50 rounded-xl p-1 border border-valorant-gray/20">
                 <button
-                  onClick={() => setActiveFilter('all')}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeFilter === 'all'
+                  onClick={() => setFilters({ ...filters, type: 'all' })}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-valorant-red/50 ${
+                    filters.type === 'all'
                           ? 'bg-valorant-red text-white shadow-lg'
                           : 'text-valorant-light/60 hover:text-white hover:bg-valorant-dark/30'
                   }`}
@@ -355,9 +415,9 @@ export default function HomePage() {
                   All Activity
                 </button>
                 <button
-                  onClick={() => setActiveFilter('parties')}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeFilter === 'parties'
+                  onClick={() => setFilters({ ...filters, type: 'parties' })}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-valorant-red/50 ${
+                    filters.type === 'parties'
                           ? 'bg-valorant-red text-white shadow-lg'
                           : 'text-valorant-light/60 hover:text-white hover:bg-valorant-dark/30'
                   }`}
@@ -366,9 +426,9 @@ export default function HomePage() {
                   Parties
                 </button>
                 <button
-                  onClick={() => setActiveFilter('lfg')}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeFilter === 'lfg'
+                  onClick={() => setFilters({ ...filters, type: 'lfg' })}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-valorant-red/50 ${
+                    filters.type === 'lfg'
                           ? 'bg-valorant-red text-white shadow-lg'
                           : 'text-valorant-light/60 hover:text-white hover:bg-valorant-dark/30'
                   }`}
@@ -379,9 +439,130 @@ export default function HomePage() {
               </div>
 
                   <div className="text-valorant-light/60 text-sm">
-                    {loading ? 'Loading...' : `${filteredData().length} active ${activeFilter === 'all' ? 'posts' : activeFilter}`}
+                    {loading ? 'Loading...' : `${filteredData().length} active ${filters.type === 'all' ? 'posts' : filters.type}`}
               </div>
+              
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-valorant-red/50 ${
+                  showFilters
+                    ? 'bg-valorant-red text-white shadow-lg'
+                    : 'text-valorant-light/60 hover:text-white hover:bg-valorant-dark/30'
+                }`}
+              >
+                <Filter className="w-4 h-4 mr-2 inline" />
+                {showFilters ? 'Hide Filters' : 'Advanced Filters'}
+              </button>
             </div>
+            
+            {/* Advanced Filters */}
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="bg-valorant-dark/30 rounded-xl p-4 border border-valorant-gray/20 space-y-4"
+              >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Type Filter */}
+                <div>
+                  <label htmlFor="filter-type" className="block text-xs font-semibold text-white mb-2">Type</label>
+                  <select
+                    id="filter-type"
+                    value={filters.type}
+                    onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+                    className="w-full px-3 py-2 bg-valorant-dark border border-valorant-gray/20 rounded-lg text-white text-sm focus:border-valorant-red focus:ring-1 focus:ring-valorant-red"
+                  >
+                    <option value="all">All</option>
+                    <option value="parties">Parties</option>
+                    <option value="lfg">LFG</option>
+                  </select>
+                </div>
+                
+                {/* Rank Filter */}
+                <div>
+                  <label htmlFor="filter-rank" className="block text-xs font-semibold text-white mb-2">Rank</label>
+                  <select
+                    id="filter-rank"
+                    value={filters.rank}
+                    onChange={(e) => setFilters({ ...filters, rank: e.target.value })}
+                    className="w-full px-3 py-2 bg-valorant-dark border border-valorant-gray/20 rounded-lg text-white text-sm focus:border-valorant-red focus:ring-1 focus:ring-valorant-red"
+                  >
+                    <option value="">Any Rank</option>
+                    {allRanks.map((rank) => (
+                      <option key={rank} value={rank}>{rank}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Server Filter */}
+                <div>
+                  <label htmlFor="filter-server" className="block text-xs font-semibold text-white mb-2">Server</label>
+                  <select
+                    id="filter-server"
+                    value={filters.server}
+                    onChange={(e) => setFilters({ ...filters, server: e.target.value })}
+                    className="w-full px-3 py-2 bg-valorant-dark border border-valorant-gray/20 rounded-lg text-white text-sm focus:border-valorant-red focus:ring-1 focus:ring-valorant-red"
+                  >
+                    <option value="">Any Server</option>
+                    {allServers.map((server) => (
+                      <option key={server} value={server}>{server}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Mode Filter */}
+                <div>
+                  <label htmlFor="filter-mode" className="block text-xs font-semibold text-white mb-2">Mode</label>
+                  <select
+                    id="filter-mode"
+                    value={filters.mode}
+                    onChange={(e) => setFilters({ ...filters, mode: e.target.value })}
+                    className="w-full px-3 py-2 bg-valorant-dark border border-valorant-gray/20 rounded-lg text-white text-sm focus:border-valorant-red focus:ring-1 focus:ring-valorant-red"
+                  >
+                    <option value="">Any Mode</option>
+                    {GAME_MODES.map((mode) => (
+                      <option key={mode} value={mode}>{mode}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Time Left Filter */}
+                <div>
+                  <label htmlFor="filter-time-left" className="block text-xs font-semibold text-white mb-2">Time Left</label>
+                  <select
+                    id="filter-time-left"
+                    value={filters.timeLeft}
+                    onChange={(e) => setFilters({ ...filters, timeLeft: e.target.value })}
+                    className="w-full px-3 py-2 bg-valorant-dark border border-valorant-gray/20 rounded-lg text-white text-sm focus:border-valorant-red focus:ring-1 focus:ring-valorant-red"
+                  >
+                    <option value="">Any Time</option>
+                    <option value="expired">Expired</option>
+                    <option value="5min">≤ 5 minutes</option>
+                    <option value="15min">≤ 15 minutes</option>
+                    <option value="30min">≤ 30 minutes</option>
+                    <option value="1hour">≤ 1 hour</option>
+                    <option value="2hours">≤ 2 hours</option>
+                    <option value="4hours">≤ 4 hours</option>
+                    <option value="8hours">≤ 8 hours</option>
+                    <option value="24hours">≤ 24 hours</option>
+                  </select>
+                </div>
+                
+                {/* Clear Filters */}
+                <div className="flex items-end">
+                  <button
+                    onClick={() => setFilters({ rank: '', server: '', mode: '', timeLeft: '', type: 'all' })}
+                    className="w-full px-4 py-2 bg-valorant-gray/20 hover:bg-valorant-gray/30 border border-valorant-gray/30 rounded-lg text-white text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-valorant-red/50"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              </div>
+              </motion.div>
+            )}
 
                 {/* Activity Feed */}
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -413,15 +594,15 @@ export default function HomePage() {
                   ) : (
                     <div className="col-span-1 md:col-span-2 xl:col-span-4 w-full text-center py-16 px-6 rounded-2xl border border-valorant-gray/20 bg-gradient-to-b from-black/20 to-transparent">
                       <div className="text-valorant-light/60 mb-6">
-                        {activeFilter === 'all' && <Search className="w-16 h-16 mx-auto mb-4" />}
-                        {activeFilter === 'parties' && <Users className="w-16 h-16 mx-auto mb-4" />}
-                        {activeFilter === 'lfg' && <UserPlus className="w-16 h-16 mx-auto mb-4" />}
+                        {filters.type === 'all' && <Search className="w-16 h-16 mx-auto mb-4" />}
+                        {filters.type === 'parties' && <Users className="w-16 h-16 mx-auto mb-4" />}
+                        {filters.type === 'lfg' && <UserPlus className="w-16 h-16 mx-auto mb-4" />}
                     </div>
                       <h3 className="text-xl font-semibold text-white mb-2">
-                      No {activeFilter === 'all' ? 'activity' : activeFilter} found
+                      No {filters.type === 'all' ? 'activity' : filters.type} found
                       </h3>
                       <p className="text-valorant-light/60 mb-6">
-                        Be the first to create a {activeFilter === 'all' ? 'post' : activeFilter === 'parties' ? 'party' : 'LFG request'}!
+                        Be the first to create a {filters.type === 'all' ? 'post' : filters.type === 'parties' ? 'party' : 'LFG request'}!
                       </p>
                   </div>
                 )}
@@ -454,60 +635,10 @@ export default function HomePage() {
                       </p>
                     </div>
                     
-                    <form onSubmit={handleCreateParty} className="space-y-8">
-                      {/* Basic Settings */}
-                      <div className="bg-valorant-dark/30 rounded-xl p-5 md:p-6 border border-valorant-gray/20 space-y-5 md:space-y-6">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-white font-semibold text-base md:text-lg">Basic Settings</h3>
-                          <div className="h-px flex-1 ml-4 bg-valorant-gray/20" />
-                        </div>
-                        {/* Party Size & Game Mode Row */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 items-start">
-                          <div>
-                            <label className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">
-                              Party Size
-                            </label>
-                            <div className="grid grid-cols-3 gap-2 md:gap-3">
-                              {['Duo', 'Trio', 'FourStack'].map((size) => (
-                                <button
-                                  key={size}
-                                  type="button"
-                                  onClick={() => setPartyForm({...partyForm, size: size as any})}
-                                  className={`flex items-center justify-center gap-2 h-11 md:h-12 px-3 md:px-4 rounded-lg font-semibold transition-all border ${
-                                    partyForm.size === size
-                                      ? 'bg-valorant-red/20 text-white border-valorant-red shadow-lg'
-                                      : 'bg-valorant-dark/50 text-valorant-light hover:bg-valorant-dark border-valorant-gray/30'
-                                  }`}
-                                >
-                                  <span>{size === 'FourStack' ? 'Four Stack' : size}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">
-                              Game Mode
-                            </label>
-                            <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                              {gameModes.map((m) => {
-                                const isActive = partyForm.mode === m.key;
-                                return (
-                                <button
-                                    key={m.key}
-                                  type="button"
-                                    onClick={() => setPartyForm({ ...partyForm, mode: m.key as any })}
-                                    className={`group w-full h-12 sm:h-14 flex items-center gap-3 p-3 sm:p-4 rounded-xl border transition-all ${
-                                      isActive
-                                        ? 'bg-valorant-red/20 border-valorant-red text-white shadow-lg'
-                                        : 'bg-valorant-dark/50 border-valorant-gray/30 text-valorant-light hover:bg-valorant-dark hover:border-valorant-gray/50'
-                                    }`}
-                                  >
-                                    <div className="relative w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-md overflow-hidden ring-1 ring-valorant-gray/30 group-hover:ring-valorant-red/40">
-                                      <Image src={m.icon} alt={m.label} fill sizes="36px" className="object-cover" />
-                            </div>
-                                    <div className="flex flex-col items-start">
-                                      <span className="text-sm sm:text-base font-semibold leading-none">{m.label}</span>
+                    <CreatePartyForm 
+                      onSubmit={handleCreateParty} 
+                      isCreating={isCreatingParty}
+                    />
                                       {m.label !== m.key && (
                                         <span className={`text-[10px] sm:text-[11px] uppercase tracking-widest ${isActive ? 'text-valorant-red' : 'text-valorant-light/50'}`}>{m.key}</span>
                                       )}
@@ -523,19 +654,21 @@ export default function HomePage() {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 items-start">
                           {/* Riot ID split: name # tag */}
                           <div>
-                            <label className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">
+                            <label htmlFor="riot-name" className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">
                               Your In-Game Name
                             </label>
                             <div className="flex items-center gap-2">
                             <input
+                              id="riot-name"
                               type="text"
                                 placeholder="Tardic"
                                 value={riotName}
                                 onChange={(e) => setRiotName(e.target.value)}
                                 className="w-full h-11 md:h-12 px-4 bg-valorant-dark/50 border border-valorant-gray/30 rounded-lg text-white placeholder-valorant-light/50 focus:outline-none focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
                               />
-                              <div className="px-3 h-11 md:h-12 flex items-center bg-valorant-dark/60 border border-valorant-gray/30 rounded-lg text-valorant-light/80 font-semibold select-none">#</div>
+                              <div className="px-3 h-11 md:h-12 flex items-center bg-valorant-dark/60 border border-valorant-gray/30 rounded-lg text-valorant-light/80 font-semibold select-none" aria-hidden="true">#</div>
                               <input
+                                id="riot-tag"
                                 type="text"
                                 placeholder="6969"
                                 value={riotTag}
@@ -549,12 +682,13 @@ export default function HomePage() {
 
                           {/* Your Rank */}
                           <div>
-                            <label className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">
+                            <label htmlFor="party-rank" className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">
                               Your Rank
                             </label>
                             <div className="relative">
                             <div className="relative">
                               <select
+                                id="party-rank"
                                 value={partyForm.rank}
                                 onChange={(e) => setPartyForm({...partyForm, rank: e.target.value})}
                                   className="w-full h-11 md:h-12 pl-12 pr-10 bg-valorant-dark/50 border border-valorant-gray/30 rounded-lg text-white focus:border-valorant-red focus:ring-2 focus:ring-valorant-red/20 transition-all appearance-none"
@@ -576,9 +710,10 @@ export default function HomePage() {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 items-start">
                           {/* Server Location */}
                       <div>
-                            <label className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">Server Location</label>
+                            <label htmlFor="party-server" className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">Server Location</label>
                             <div className="relative">
                               <select
+                                id="party-server"
                                 value={partyForm.server}
                                 onChange={(e) => setPartyForm({...partyForm, server: e.target.value})}
                                 className="w-full h-11 md:h-12 pl-4 pr-10 bg-valorant-dark/50 border border-valorant-gray/30 rounded-lg text-white focus:border-valorant-red focus:ring-2 focus:ring-valorant-red/20 transition-all appearance-none"
@@ -600,8 +735,9 @@ export default function HomePage() {
 
                           {/* Discord Link */}
                           <div>
-                            <label className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">Discord Link (optional)</label>
+                            <label htmlFor="discord-link" className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">Discord Link (optional)</label>
                             <input
+                              id="discord-link"
                               type="url"
                               value={discordLink}
                               onChange={(e) => setDiscordLink(e.target.value)}
@@ -617,9 +753,10 @@ export default function HomePage() {
                         <div className="grid grid-cols-1 lg:grid-cols-2 items-stretch gap-6">
                           {/* Party Code */}
                           <div className="h-full flex flex-col">
-                            <label className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">Party Code</label>
+                            <label htmlFor="party-code" className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">Party Code</label>
                             <div className="flex flex-col gap-2">
                         <input
+                          id="party-code"
                           type="text"
                           value={partyForm.code}
                                 onChange={(e) => setPartyForm({ ...partyForm, code: e.target.value.toUpperCase() })}
@@ -654,19 +791,19 @@ export default function HomePage() {
                           </div>
                           {/* Active For (segmented chips) */}
                           <div className="h-full flex flex-col">
-                            <label className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">Active For</label>
-                            <div className="grid grid-cols-4 gap-2 flex-1 content-start">
-                              {[5,10,15,30,45,60,90,120].map((m) => {
-                                const active = ((partyForm as any).durationMinutes || 30) === m;
+                            <label id="active-for-label" className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">Active For</label>
+                            <div className="grid grid-cols-4 gap-2 flex-1 content-start" role="group" aria-labelledby="active-for-label">
+                              {DURATION_OPTIONS.map((option) => {
+                                const active = ((partyForm as any).durationMinutes || 30) === option.value;
                                 return (
                                   <button
-                                    key={m}
+                                    key={option.value}
                                     type="button"
-                                    onClick={() => setPartyForm({ ...partyForm, ...( { durationMinutes: m } as any) })}
-                                    className={`h-10 rounded-lg text-xs font-medium border transition-all ${active ? 'bg-valorant-red/20 text-white border-valorant-red shadow' : 'bg-valorant-dark/50 text-valorant-light border-valorant-gray/30 hover:bg-valorant-dark'}`}
-                                    title={`${m} minutes`}
+                                    onClick={() => setPartyForm({ ...partyForm, ...( { durationMinutes: option.value } as any) })}
+                                    className={`h-10 rounded-lg text-xs font-medium border transition-all focus:outline-none focus:ring-2 focus:ring-valorant-red/50 ${active ? 'bg-valorant-red/20 text-white border-valorant-red shadow' : 'bg-valorant-dark/50 text-valorant-light border-valorant-gray/30 hover:bg-valorant-dark'}`}
+                                    title={option.label}
                                   >
-                                    {m} min
+                                    {option.value} min
                                   </button>
                                 );
                               })}
@@ -704,7 +841,7 @@ export default function HomePage() {
                                       : [...partyForm.lookingForRoles, role];
                                     setPartyForm({...partyForm, lookingForRoles: newRoles});
                                   }}
-                                  className={`w-full flex items-center justify-center gap-2 h-11 md:h-12 px-3 rounded-lg text-sm font-medium transition-all border ${
+                                  className={`w-full flex items-center justify-center gap-2 h-11 md:h-12 px-3 rounded-lg text-sm font-medium transition-all border focus:outline-none focus:ring-2 focus:ring-valorant-red/50 ${
                                     isSelected
                                        ? 'bg-valorant-red/20 text-white border-valorant-red shadow'
                                        : 'bg-valorant-dark/50 text-valorant-light hover:bg-valorant-dark border-valorant-gray/30'
@@ -768,7 +905,7 @@ export default function HomePage() {
                                                   : [...partyForm.preferredAgents, agent];
                                                 setPartyForm({...partyForm, preferredAgents: newAgents});
                                               }}
-                                              className={`flex flex-col items-center p-1.5 rounded-md transition-all ${
+                                              className={`flex flex-col items-center p-1.5 rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-valorant-red/50 ${
                                                 isSelected
                                                   ? 'bg-valorant-red/20 border border-valorant-red text-white'
                                                   : 'bg-valorant-dark/30 border border-valorant-gray/20 text-valorant-light hover:bg-valorant-dark/50'
@@ -808,16 +945,21 @@ export default function HomePage() {
                               Player Requirements
                             </label>
                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
-                              {[
-                                { id: 'Microphone Required', icon: Mic },
-                                { id: 'Headset Required', icon: Headphones },
-                                { id: 'Discord Required', icon: MessageSquare },
-                                { id: 'English Speaking', icon: Globe },
-                                { id: '18+ Only', icon: Shield },
-                                { id: 'No Toxicity', icon: Heart },
-                                { id: 'Competitive Mindset', icon: Target },
-                                { id: 'Team Communication', icon: MessageCircle }
-                              ].map(({ id, icon: Icon }) => {
+                              {REQUIREMENT_TAGS.map((tag) => {
+                                const iconMap: { [key: string]: any } = {
+                                  'Mic Required': Mic,
+                                  'Discord Required': MessageSquare,
+                                  'English Required': Globe,
+                                  '18+ Only': Shield,
+                                  'No Toxicity': Heart,
+                                  'Experienced Players Only': Target,
+                                  'Beginner Friendly': Heart,
+                                  'Team Player': MessageCircle,
+                                  'Good Communication': MessageCircle,
+                                  'Flexible Roles': Users
+                                };
+                                const Icon = iconMap[tag] || Users;
+                                const id = tag;
                                 const isSelected = partyForm.tags.includes(id);
                                 return (
                                   <button
@@ -829,7 +971,7 @@ export default function HomePage() {
                                         : [...partyForm.tags, id];
                                       setPartyForm({...partyForm, tags: newTags});
                                     }}
-                                     className={`w-full h-11 md:h-12 px-3 rounded-lg text-xs font-medium transition-all border flex items-center justify-center gap-2 ${
+                                     className={`w-full h-11 md:h-12 px-3 rounded-lg text-xs font-medium transition-all border flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-valorant-red/50 ${
                                       isSelected
                                          ? 'bg-valorant-red/20 text-white border-valorant-red shadow'
                                          : 'bg-valorant-dark/50 text-valorant-light hover:bg-valorant-dark border-valorant-gray/30'
@@ -858,17 +1000,17 @@ export default function HomePage() {
                           </p>
                         </div>
                         <div className="flex gap-3 md:gap-4 md:justify-end">
-                          <button
+                        <button
                           type="button"
                           onClick={() => setActiveTab('browse')}
-                            className="inline-flex items-center justify-center w-full md:w-auto h-12 px-6 bg-valorant-dark/50 border border-valorant-gray/30 text-valorant-light rounded-lg hover:bg-valorant-dark transition-all font-semibold"
+                            className="inline-flex items-center justify-center w-full md:w-auto h-12 px-6 bg-valorant-dark/50 border border-valorant-gray/30 text-valorant-light rounded-lg hover:bg-valorant-dark transition-all font-semibold focus:outline-none focus:ring-2 focus:ring-valorant-red/50"
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
                             disabled={isCreatingParty}
-                            className={`inline-flex items-center justify-center w-full md:w-auto h-12 px-6 rounded-lg transition-all font-semibold text-base md:text-lg shadow-lg hover:shadow-xl ${isCreatingParty ? 'bg-valorant-dark text-valorant-light/50 border border-valorant-gray/30 cursor-not-allowed' : 'bg-valorant-red text-white hover:bg-valorant-red/80'}`}
+                            className={`inline-flex items-center justify-center w-full md:w-auto h-12 px-6 rounded-lg transition-all font-semibold text-base md:text-lg shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-valorant-red/50 ${isCreatingParty ? 'bg-valorant-dark text-valorant-light/50 border border-valorant-gray/30 cursor-not-allowed' : 'bg-valorant-red text-white hover:bg-valorant-red/80'}`}
                         >
                             <Users className="w-5 h-5 mr-2" />
                             {isCreatingParty ? 'Creating…' : 'Create Party'}
@@ -913,17 +1055,19 @@ export default function HomePage() {
                         {/* Row 1: Riot ID split + Rank */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
-                            <label className="block text-sm font-medium text-valorant-light mb-2">Your In-Game Name</label>
+                            <label htmlFor="lfg-riot-name" className="block text-sm font-medium text-valorant-light mb-2">Your In-Game Name</label>
                             <div className="flex items-center gap-2">
                             <input
+                              id="lfg-riot-name"
                               type="text"
                                 value={riotName}
                                 onChange={(e) => setRiotName(e.target.value)}
                                 placeholder="Name"
                                 className="w-full px-4 py-3 bg-valorant-dark/50 border border-valorant-gray/30 rounded-lg text-white placeholder-valorant-light/50 focus:outline-none focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
                               />
-                              <span className="px-3 py-3 bg-valorant-dark/60 border border-valorant-gray/30 rounded-lg text-valorant-light/70">#</span>
+                              <span className="px-3 py-3 bg-valorant-dark/60 border border-valorant-gray/30 rounded-lg text-valorant-light/70" aria-hidden="true">#</span>
                             <input
+                              id="lfg-riot-tag"
                               type="text"
                                 value={riotTag}
                                 onChange={(e) => setRiotTag(e.target.value)}
@@ -933,9 +1077,10 @@ export default function HomePage() {
                           </div>
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-valorant-light mb-2">Your Rank</label>
+                            <label htmlFor="lfg-rank" className="block text-sm font-medium text-valorant-light mb-2">Your Rank</label>
                             <div className="relative">
                               <select
+                                id="lfg-rank"
                                 value={lfgForm.rank}
                                 onChange={(e) => setLfgForm({ ...lfgForm, rank: e.target.value })}
                                 className="w-full px-4 py-3 bg-valorant-dark border border-valorant-gray/20 rounded-lg text-white focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
@@ -957,8 +1102,9 @@ export default function HomePage() {
                         {/* Row 2: Server + Availability */}
                         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
-                            <label className="block text-sm font-medium text-valorant-light mb-2">Server Location</label>
+                            <label htmlFor="lfg-server" className="block text-sm font-medium text-valorant-light mb-2">Server Location</label>
                             <select
+                              id="lfg-server"
                               value={lfgForm.server}
                               onChange={(e) => setLfgForm({ ...lfgForm, server: e.target.value })}
                               className="w-full px-4 py-3 bg-valorant-dark border border-valorant-gray/20 rounded-lg text-white focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
@@ -974,17 +1120,17 @@ export default function HomePage() {
                             </select>
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-valorant-light mb-2">Availability</label>
+                            <label htmlFor="lfg-availability" className="block text-sm font-medium text-valorant-light mb-2">Availability</label>
                             <select
+                              id="lfg-availability"
                               value={lfgForm.availability}
                               onChange={(e) => setLfgForm({ ...lfgForm, availability: e.target.value })}
                               className="w-full px-4 py-3 bg-valorant-dark border border-valorant-gray/20 rounded-lg text-white focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
                             >
                               <option value="" disabled>Select availability…</option>
-                              <option value="Now">Now</option>
-                              <option value="Tonight">Tonight</option>
-                              <option value="This Week">This Week</option>
-                              <option value="Weekend">Weekend</option>
+                              {AVAILABILITY_OPTIONS.map((option) => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
                             </select>
                           </div>
                         </div>
@@ -999,30 +1145,23 @@ export default function HomePage() {
                           <div>
                           <label className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">Playstyle</label>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
-                              {[
-                                { name: 'Entry', desc: 'First contact, site entry' },
-                                { name: 'Support', desc: 'Healing, utility support' },
-                                { name: 'IGL', desc: 'In-game leader, shot caller' },
-                                { name: 'Fragger', desc: 'High kill potential' },
-                                { name: 'Flex', desc: 'Adaptable to team needs' }
-                            ].map((style) => (
+                              {PLAYSTYLES.map((style) => (
                                 <button
-                                  key={style.name}
+                                  key={style}
                                   type="button"
                                   onClick={() => {
-                                    const newPlaystyle = lfgForm.playstyle.includes(style.name)
-                                    ? lfgForm.playstyle.filter((p) => p !== style.name)
-                                      : [...lfgForm.playstyle, style.name];
+                                    const newPlaystyle = lfgForm.playstyle.includes(style)
+                                    ? lfgForm.playstyle.filter((p) => p !== style)
+                                      : [...lfgForm.playstyle, style];
                                   setLfgForm({ ...lfgForm, playstyle: newPlaystyle });
                                   }}
-                                className={`h-11 md:h-12 px-3 md:px-4 rounded-lg border text-xs md:text-sm transition-all ${
-                                    lfgForm.playstyle.includes(style.name)
+                                className={`h-11 md:h-12 px-3 md:px-4 rounded-lg border text-xs md:text-sm transition-all focus:outline-none focus:ring-2 focus:ring-valorant-red/50 ${
+                                    lfgForm.playstyle.includes(style)
                                     ? 'bg-valorant-red/20 border-valorant-red/50 text-white'
                                     : 'bg-valorant-dark/50 border-valorant-gray/30 text-valorant-light hover:bg-valorant-gray/20'
-                                  }`}
-                                  title={style.desc}
+                                }`}
                                 >
-                                  {style.name}
+                                  {style}
                                 </button>
             ))}
         </div>
@@ -1050,7 +1189,7 @@ export default function HomePage() {
                                       : [...lfgForm.tags, t];
                                     setLfgForm({ ...lfgForm, tags });
                                   }}
-                                  className={`h-11 md:h-12 px-3 md:px-4 rounded-lg border text-xs md:text-sm transition-all ${
+                                  className={`h-11 md:h-12 px-3 md:px-4 rounded-lg border text-xs md:text-sm transition-all focus:outline-none focus:ring-2 focus:ring-valorant-red/50 ${
                                     active
                                       ? 'bg-valorant-red/20 border-valorant-red/50 text-white'
                                       : 'bg-valorant-dark/50 border-valorant-gray/30 text-valorant-light hover:bg-valorant-gray/20'
@@ -1071,14 +1210,14 @@ export default function HomePage() {
                         <button
                           type="button"
                           onClick={() => setActiveTab('browse')}
-                          className="flex-1 px-6 py-4 bg-valorant-dark border border-valorant-gray/20 text-valorant-light rounded-lg hover:bg-valorant-gray/20 transition-all font-medium"
+                          className="flex-1 px-6 py-4 bg-valorant-dark border border-valorant-gray/20 text-valorant-light rounded-lg hover:bg-valorant-gray/20 transition-all font-medium focus:outline-none focus:ring-2 focus:ring-valorant-red/50"
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
                           disabled={!isLfgFormValid || isCreatingLfg}
-                          className={`flex-1 px-6 py-4 rounded-lg transition-all font-medium text-lg shadow-lg hover:shadow-xl ${
+                          className={`flex-1 px-6 py-4 rounded-lg transition-all font-medium text-lg shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-valorant-red/50 ${
                             (!isLfgFormValid || isCreatingLfg)
                               ? 'bg-valorant-dark text-valorant-light/50 border border-valorant-gray/30 cursor-not-allowed'
                               : 'bg-valorant-red text-white hover:bg-valorant-red/80'
@@ -1100,313 +1239,3 @@ export default function HomePage() {
   );
 }
 
-// Enhanced Party Card Component
-function PartyCard({ party, onCopy, copied }: { party: PartyInvite; onCopy: (text: string, type: string) => void; copied: boolean }) {
-  const isExpired = new Date() > new Date(party.expiresAt);
-
-  const roleHasImage = (role: string) => ['Duelist','Initiator','Controller','Sentinel'].includes(role);
-
-  const getSizeIcon = (size: string) => {
-    switch (size) {
-      case 'Solo': return '👤';
-      case 'Duo': return '👥';
-      case 'Trio': return '👨‍👩‍👧';
-      case 'FourStack': return '👨‍👩‍👧‍👦';
-      default: return '👥';
-    }
-  };
-
-  const getTimeAgo = (d: Date | string) => {
-    const ms = Date.now() - new Date(d).getTime();
-    const m = Math.floor(ms / 60000);
-    if (m < 1) return 'just now';
-    if (m < 60) return `${m}m ago`;
-    const h = Math.floor(m / 60);
-    if (h < 24) return `${h}h ago`;
-    const days = Math.floor(h / 24);
-    return `${days}d ago`;
-  };
-
-  const getTtl = (d: Date | string) => {
-    const ms = new Date(d).getTime() - Date.now();
-    if (ms <= 0) return 'expired';
-    const m = Math.ceil(ms / 60000);
-    if (m < 60) return `${m}m left`;
-    const h = Math.floor(m / 60);
-    const rm = m % 60;
-    return rm ? `${h}h ${rm}m left` : `${h}h left`;
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ scale: 1.02 }}
-      transition={{ duration: 0.2 }}
-      className={`group relative bg-gradient-to-br from-[#0F1923] to-[#1A1D29] border-2 rounded-2xl overflow-hidden transition-all ${
-        isExpired ? 'opacity-50 border-gray-700' : 'border-valorant-red/40 hover:border-valorant-red hover:shadow-2xl hover:shadow-valorant-red/20'
-      }`}
-    >
-      {/* Red accent stripe */}
-      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-valorant-red via-orange-500 to-valorant-red" />
-      
-      {/* Rank badge - top right corner */}
-      <div className="absolute top-4 right-4 w-16 h-16 z-10">
-        <Image src={getRankImage(party.rank)} alt={party.rank} fill sizes="64px" className="object-contain drop-shadow-lg" />
-            </div>
-            
-      <div className="p-5 pt-6 space-y-4">
-        {/* Party Code - Hero Element */}
-        <div className="text-center py-6 bg-black/30 rounded-xl border border-valorant-red/30">
-          <div className="text-[10px] uppercase tracking-widest text-valorant-light/60 mb-2">Party Code</div>
-          <div className="font-mono text-3xl tracking-[0.3em] text-white font-bold">{party.code}</div>
-          <div className="mt-3 flex justify-center gap-2">
-            {!isExpired && (
-              <button onClick={() => onCopy(party.code, party._id)} disabled={copied} className="px-4 py-1.5 bg-valorant-red/20 hover:bg-valorant-red/30 border border-valorant-red/50 rounded-lg text-white text-xs font-semibold transition-all" aria-label={`Copy party code ${party.code}`}>
-                {copied ? '✓ Copied' : 'Copy Code'}
-              </button>
-            )}
-            {party.discordLink && (
-              <a href={party.discordLink} target="_blank" rel="noopener noreferrer" className="px-4 py-1.5 bg-[#5865F2]/20 hover:bg-[#5865F2]/30 border border-[#5865F2]/50 rounded-lg text-white text-xs font-semibold transition-all">
-                Discord
-              </a>
-            )}
-                </div>
-                </div>
-
-        {/* Info Grid */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-valorant-light/60">Mode</span>
-            <span className="text-white font-semibold">{party.mode}</span>
-          </div>
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-valorant-light/60">Size</span>
-            <span className="text-white font-semibold">{party.size}</span>
-        </div>
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-valorant-light/60">Server</span>
-            <span className="text-white font-semibold text-right">{party.server}</span>
-                      </div>
-          {party.inGameName && (
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-valorant-light/60">Player</span>
-              <span className="text-white font-semibold">{party.inGameName}</span>
-                      </div>
-                    )}
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-valorant-light/60">Expires</span>
-            <span className="text-orange-400 font-semibold">{getTtl(party.expiresAt)}</span>
-                  </div>
-        </div>
-
-        {/* Description */}
-        {party.description && (
-          <div className="pt-3 border-t border-valorant-gray/20">
-            <p className="text-valorant-light/80 text-xs leading-relaxed italic">{party.description}</p>
-                </div>
-              )}
-              
-              {/* Looking For Roles */}
-              {party.lookingForRoles && party.lookingForRoles.length > 0 && (
-          <div className="pt-3 border-t border-valorant-gray/20">
-            <div className="text-[10px] uppercase tracking-widest text-valorant-light/60 mb-2">Looking For</div>
-            <div className="flex flex-wrap gap-1.5">
-              {party.lookingForRoles.map((role, i) => (
-                <div key={`${role}-${i}`} className="flex items-center gap-1 bg-valorant-red/10 border border-valorant-red/30 rounded-md px-2 py-1">
-                  {roleHasImage(role) && <Image src={`/roles/${role}ClassSymbol.png`} alt={role} width={12} height={12} className="object-contain" />}
-                  <span className="text-white text-[11px] font-medium">{role}</span>
-                  </div>
-              ))}
-                        </div>
-          </div>
-        )}
-
-        {/* Preferred Roles (What Creator Plays) */}
-        {Array.isArray((party as any).preferredRoles) && (party as any).preferredRoles.length > 0 && (
-          <div className="pt-3 border-t border-valorant-gray/20">
-            <div className="text-[10px] uppercase tracking-widest text-valorant-light/60 mb-2">Creator Plays</div>
-            <div className="flex flex-wrap gap-1.5">
-              {(party as any).preferredRoles.map((role: string, i: number) => (
-                <div key={`${role}-pref-${i}`} className="flex items-center gap-1 bg-blue-500/10 border border-blue-500/30 rounded-md px-2 py-1">
-                  <span className="text-blue-300 text-[11px] font-medium">{role}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-        {/* Agents Preview */}
-        {party.preferredAgents && party.preferredAgents.length > 0 && (
-          <div className="pt-3 border-t border-valorant-gray/20">
-            <div className="text-[10px] uppercase tracking-widest text-valorant-light/60 mb-2">Preferred Agents</div>
-            <div className="grid grid-cols-4 gap-2">
-              {party.preferredAgents.slice(0, 4).map((agent, i) => (
-                <div key={`${agent}-${i}`} className="flex flex-col items-center gap-1 group/agent">
-                  <div className="w-10 h-10 rounded-lg overflow-hidden border border-valorant-gray/30 bg-black/40 group-hover/agent:border-valorant-red/50 transition-all">
-                    <Image src={getAgentImage(agent)} alt={agent} width={40} height={40} className="object-cover" />
-          </div>
-                  <span className="text-[9px] text-valorant-light/70 truncate w-full text-center">{agent}</span>
-        </div>
-              ))}
-              {party.preferredAgents.length > 4 && (
-                <div className="flex items-center justify-center text-[10px] text-valorant-light/50">
-                  +{party.preferredAgents.length - 4}
-          </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Requirements/Tags */}
-        {party.tags && party.tags.length > 0 && (
-          <div className="pt-3 border-t border-valorant-gray/20">
-            <div className="text-[10px] uppercase tracking-widest text-valorant-light/60 mb-2">Requirements</div>
-            <div className="flex flex-wrap gap-1">
-              {party.tags.slice(0, 4).map((t, i) => (
-                <span key={`${t}-${i}`} className="px-2 py-0.5 bg-black/40 border border-valorant-gray/40 rounded text-[10px] text-valorant-light/70">
-                  {t.replace(' Required', '')}
-                </span>
-              ))}
-              {party.tags.length > 4 && (
-                <span className="px-2 py-0.5 text-[10px] text-valorant-light/50">+{party.tags.length - 4}</span>
-          )}
-          </div>
-          </div>
-        )}
-
-        {/* Footer: Time + Views */}
-        <div className="pt-3 border-t border-valorant-gray/20 flex items-center justify-between text-[10px] text-valorant-light/50">
-          <span>Posted {getTimeAgo(party.createdAt)}</span>
-          {typeof (party as any).views === 'number' && (
-            <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{(party as any).views}</span>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-// Enhanced LFG Card Component
-function LFGCard({ lfg, onCopy, copied }: { lfg: LFGRequest; onCopy: (text: string, type: string) => void; copied: boolean }) {
-  const isExpired = new Date() > new Date(lfg.expiresAt);
-
-  const roleHasImage = (role: string) => ['Duelist','Initiator','Controller','Sentinel'].includes(role);
-
-  const getTimeAgo = (d: Date | string) => {
-    const ms = Date.now() - new Date(d).getTime();
-    const m = Math.floor(ms / 60000);
-    if (m < 1) return 'just now';
-    if (m < 60) return `${m}m ago`;
-    const h = Math.floor(m / 60);
-    if (h < 24) return `${h}h ago`;
-    const days = Math.floor(h / 24);
-    return `${days}d ago`;
-  };
-
-  const getTtl = (d: Date | string) => {
-    const ms = new Date(d).getTime() - Date.now();
-    if (ms <= 0) return 'expired';
-    const m = Math.ceil(ms / 60000);
-    if (m < 60) return `${m}m left`;
-    const h = Math.floor(m / 60);
-    const rm = m % 60;
-    return rm ? `${h}h ${rm}m left` : `${h}h left`;
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -2 }}
-      className={`relative overflow-hidden transition-all duration-300 rounded-xl border w-full ${
-        isExpired ? 'opacity-60 border-gray-700' : 'hover:border-valorant-blue/60 hover:shadow-[0_0_0_1px_rgba(64,185,255,0.35)]'
-      }`}
-      style={{ background: 'linear-gradient(180deg, rgba(64,185,255,0.10) 0%, rgba(20,24,28,0.8) 100%)' }}
-    >
-      <div className="absolute inset-x-0 top-0 h-1 bg-sky-500/60" />
-      <div className="p-5 pt-6 space-y-4">
-        {/* Username - Hero Element */}
-        <div className="text-center py-6 bg-black/30 rounded-xl border border-sky-500/30">
-          <div className="text-[10px] uppercase tracking-widest text-valorant-light/60 mb-2">Player Looking for Group</div>
-          <div className="font-mono text-2xl tracking-wider text-white font-bold">{lfg.username}</div>
-          <div className="mt-3 flex justify-center gap-2">
-            {!isExpired && (
-              <button onClick={() => onCopy(lfg.username, lfg._id)} disabled={copied} className="px-4 py-1.5 bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/50 rounded-lg text-white text-xs font-semibold transition-all" aria-label={`Copy player id ${lfg.username}`}>
-                {copied ? '✓ Copied' : 'Copy ID'}
-              </button>
-            )}
-              </div>
-            </div>
-            
-        {/* Info Grid */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-valorant-light/60">Availability</span>
-            <span className="text-sky-300 font-semibold">{lfg.availability}</span>
-                </div>
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-valorant-light/60">Server</span>
-            <span className="text-white font-semibold text-right">{lfg.server}</span>
-                </div>
-          {lfg.inGameName && (
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-valorant-light/60">IGN</span>
-              <span className="text-white font-semibold">{lfg.inGameName}</span>
-          </div>
-          )}
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-valorant-light/60">Expires</span>
-            <span className="text-orange-400 font-semibold">{getTtl(lfg.expiresAt)}</span>
-        </div>
-        </div>
-
-        {/* Description */}
-              {lfg.description && (
-          <div className="pt-3 border-t border-valorant-gray/20">
-            <p className="text-valorant-light/80 text-xs leading-relaxed italic">{lfg.description}</p>
-          </div>
-        )}
-
-        {/* Playstyle */}
-              {lfg.playstyle && lfg.playstyle.length > 0 && (
-          <div className="pt-3 border-t border-valorant-gray/20">
-            <div className="text-[10px] uppercase tracking-widest text-valorant-light/60 mb-2">Playstyle</div>
-            <div className="flex flex-wrap gap-1.5">
-              {lfg.playstyle.map((style, i) => (
-                <div key={`${style}-${i}`} className="flex items-center gap-1 bg-sky-500/10 border border-sky-500/30 rounded-md px-2 py-1">
-                  <span className="text-sky-300 text-[11px] font-medium">{style}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-        )}
-
-        {/* Tags */}
-        {lfg.tags && lfg.tags.length > 0 && (
-          <div className="pt-3 border-t border-valorant-gray/20">
-            <div className="text-[10px] uppercase tracking-widest text-valorant-light/60 mb-2">Preferences</div>
-            <div className="flex flex-wrap gap-1">
-              {lfg.tags.slice(0, 4).map((t, i) => (
-                <span key={`${t}-${i}`} className="px-2 py-0.5 bg-black/40 border border-valorant-gray/40 rounded text-[10px] text-valorant-light/70">
-                  {t}
-                </span>
-              ))}
-              {lfg.tags.length > 4 && (
-                <span className="px-2 py-0.5 text-[10px] text-valorant-light/50">+{lfg.tags.length - 4}</span>
-              )}
-          </div>
-        </div>
-        )}
-
-        {/* Footer: Time + Views */}
-        <div className="pt-3 border-t border-valorant-gray/20 flex items-center justify-between text-[10px] text-valorant-light/50">
-          <span>Posted {getTimeAgo(lfg.createdAt)}</span>
-          {typeof (lfg as any).views === 'number' && (
-            <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{(lfg as any).views}</span>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
-}
