@@ -135,8 +135,8 @@ export default function HomePage() {
       let totalLFG = 0;
 
       if (partiesResponse.ok) {
-        const partiesData = await partiesResponse.json();
-        if (partiesData.success) {
+      const partiesData = await partiesResponse.json();
+      if (partiesData.success) {
           allParties = partiesData.data.parties;
           totalParties = partiesData.data.pagination.total;
         }
@@ -144,7 +144,7 @@ export default function HomePage() {
 
       if (lfgResponse.ok) {
         const lfgData = await lfgResponse.json();
-        if (lfgData.success) {
+      if (lfgData.success) {
           allLFG = lfgData.data.lfgRequests;
           totalLFG = lfgData.data.pagination.total;
         }
@@ -811,7 +811,7 @@ export default function HomePage() {
                                 className="w-28 h-11 md:h-12 px-3 bg-valorant-dark/50 border border-valorant-gray/30 rounded-lg text-white placeholder-valorant-light/50 focus:outline-none focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all"
                                 maxLength={5}
                               />
-                    </div>
+                            </div>
 
                           </div>
 
@@ -837,36 +837,36 @@ export default function HomePage() {
                                   <Image src={getRankImage(partyForm.rank)} alt={partyForm.rank} fill sizes="24px" className="object-contain" />
                   </div>
                             </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
                         {/* Connection Row: Server Location — Discord Link */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 items-start">
                           {/* Server Location */}
-                      <div>
+                          <div>
                             <label htmlFor="party-server" className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">Server Location</label>
                             <div className="relative">
-                              <select
+                            <select
                                 id="party-server"
-                                value={partyForm.server}
-                                onChange={(e) => setPartyForm({...partyForm, server: e.target.value})}
+                              value={partyForm.server}
+                              onChange={(e) => setPartyForm({...partyForm, server: e.target.value})}
                                 className="w-full h-11 md:h-12 pl-4 pr-10 bg-valorant-dark/50 border border-valorant-gray/30 rounded-lg text-white focus:border-valorant-red focus:ring-2 focus:ring-valorant-red/20 transition-all appearance-none"
-                              >
-                                {Object.entries(serverOptions).map(([region, servers]) => (
-                                  <optgroup key={region} label={region}>
-                                    {servers.map(server => {
-                                      const ping = getMockPing(server);
-                                      return (
+                            >
+                              {Object.entries(serverOptions).map(([region, servers]) => (
+                                <optgroup key={region} label={region}>
+                                  {servers.map(server => {
+                                    const ping = getMockPing(server);
+                                    return (
                                         <option key={server} value={server}>{server} - {ping}ms</option>
-                                      );
-                                    })}
-                                  </optgroup>
-                                ))}
-                              </select>
+                                    );
+                                  })}
+                                </optgroup>
+                              ))}
+                            </select>
                               <ChevronDown className="w-4 h-4 text-valorant-light/70 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                             </div>
-                          </div>
+                    </div>
 
                           {/* Discord Link */}
                           <div>
@@ -886,7 +886,7 @@ export default function HomePage() {
                       {/* Party Code + Active For */}
                       <div className="bg-valorant-dark/30 rounded-xl p-5 md:p-6 border border-valorant-gray/20">
                         <div className="grid grid-cols-1 lg:grid-cols-2 items-stretch gap-6">
-                          {/* Party Code */}
+                      {/* Party Code */}
                           <div className="h-full flex flex-col">
                             <label htmlFor="party-code" className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">Party Code</label>
                             <div className="flex flex-col gap-2">
