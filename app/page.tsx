@@ -1133,26 +1133,11 @@ export default function HomePage() {
                           <p className="text-valorant-light/70 text-sm md:text-base mt-1">
                             Competitive-ready design with clean roles, ranks, and Discord support.
                           </p>
-                        </div>
-                        <div className="flex gap-3 md:gap-4 md:justify-end">
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab('browse')}
-                            className="inline-flex items-center justify-center w-full md:w-auto h-12 px-6 bg-valorant-dark/50 border border-valorant-gray/30 text-valorant-light rounded-lg hover:bg-valorant-dark transition-all font-semibold focus:outline-none focus:ring-2 focus:ring-valorant-red/50"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                            disabled={isCreatingParty}
-                            className={`inline-flex items-center justify-center w-full md:w-auto h-12 px-6 rounded-lg transition-all font-semibold text-base md:text-lg shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-valorant-red/50 ${isCreatingParty ? 'bg-valorant-dark text-valorant-light/50 border border-valorant-gray/30 cursor-not-allowed' : 'bg-valorant-red text-white hover:bg-valorant-red/80'}`}
-                        >
-                            <Users className="w-5 h-5 mr-2" />
-                            {isCreatingParty ? 'Creating…' : 'Create Party'}
-                        </button>
-                        </div>
         </div>
-                    </form>
+                        <div className="flex gap-3 md:gap-4 md:justify-end">
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
           </motion.div>
@@ -1362,14 +1347,13 @@ export default function HomePage() {
                           {isCreatingLfg ? 'Posting…' : 'Post LFG Request'}
                         </button>
                       </div>
-                    </form>
                   </div>
-            </div>
+                </div>
           </motion.div>
             )}
           </AnimatePresence>
         </main>
-        </div>
+      </div>
     </div>
   );
 }
