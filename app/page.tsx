@@ -976,80 +976,54 @@ export default function HomePage() {
                         </div>
                       </div>
 
-                      {/* Availability & Playstyle */}
-                      <div className="bg-valorant-dark/30 rounded-xl p-6 border border-valorant-gray/20">
-                        <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                          <Clock className="w-5 h-5 mr-2 text-valorant-red" />
-                          Availability & Playstyle
-                </h3>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Compact alignment: remove duplicate Availability (now in Player Information) */}
-
-                          <div>
-                            <label className="block text-sm font-medium text-valorant-light mb-2">
-                              Playstyle
-                            </label>
-                            <div className="flex flex-wrap gap-2">
-                              {[
-                                { name: 'Entry', desc: 'First contact, site entry' },
-                                { name: 'Support', desc: 'Healing, utility support' },
-                                { name: 'IGL', desc: 'In-game leader, shot caller' },
-                                { name: 'Fragger', desc: 'High kill potential' },
-                                { name: 'Flex', desc: 'Adaptable to team needs' }
-                              ].map(style => (
-                                <button
-                                  key={style.name}
-                                  type="button"
-                                  onClick={() => {
-                                    const newPlaystyle = lfgForm.playstyle.includes(style.name)
-                                      ? lfgForm.playstyle.filter(p => p !== style.name)
-                                      : [...lfgForm.playstyle, style.name];
-                                    setLfgForm({...lfgForm, playstyle: newPlaystyle});
-                                  }}
-                                  className={`px-4 py-2 rounded-lg text-sm transition-all border ${
-                                    lfgForm.playstyle.includes(style.name)
-                                      ? 'bg-valorant-red text-white border-valorant-red'
-                                      : 'bg-valorant-dark border-valorant-gray/20 text-valorant-light hover:bg-valorant-gray/20 hover:border-valorant-gray/40'
-                                  }`}
-                                  title={style.desc}
-                                >
-                                  {style.name}
-                                </button>
-            ))}
-          </div>
-                            {/* Helper text removed to match Create Party minimalism */}
-        </div>
+                      {/* Preferences (Playstyle) */}
+                      <div className="bg-valorant-dark/30 rounded-xl p-5 md:p-6 border border-valorant-gray/20 space-y-5 md:space-y-6">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-white font-semibold text-base md:text-lg">Preferences</h3>
+                          <div className="h-px flex-1 ml-4 bg-valorant-gray/20" />
+                        </div>
+                        <div>
+                          <label className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">Playstyle</label>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+                            {[
+                              { name: 'Entry', desc: 'First contact, site entry' },
+                              { name: 'Support', desc: 'Healing, utility support' },
+                              { name: 'IGL', desc: 'In-game leader, shot caller' },
+                              { name: 'Fragger', desc: 'High kill potential' },
+                              { name: 'Flex', desc: 'Adaptable to team needs' }
+                            ].map((style) => (
+                              <button
+                                key={style.name}
+                                type="button"
+                                onClick={() => {
+                                  const newPlaystyle = lfgForm.playstyle.includes(style.name)
+                                    ? lfgForm.playstyle.filter((p) => p !== style.name)
+                                    : [...lfgForm.playstyle, style.name];
+                                  setLfgForm({ ...lfgForm, playstyle: newPlaystyle });
+                                }}
+                                className={`h-11 md:h-12 px-3 md:px-4 rounded-lg border text-xs md:text-sm transition-all ${
+                                  lfgForm.playstyle.includes(style.name)
+                                    ? 'bg-valorant-red/20 border-valorant-red/50 text-white'
+                                    : 'bg-valorant-dark/50 border-valorant-gray/30 text-valorant-light hover:bg-valorant-gray/20'
+                                }`}
+                                title={style.desc}
+                              >
+                                {style.name}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       </div>
 
-                      {/* Description Section */}
-                      <div className="bg-valorant-dark/30 rounded-xl p-6 border border-valorant-gray/20">
-                        <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                          <Search className="w-5 h-5 mr-2 text-valorant-red" />
-                          Tell Us More
-                        </h3>
-                        <div>
-                          <label className="block text-sm font-medium text-valorant-light mb-2">
-                            Description (Optional)
-                          </label>
-                          <textarea
-                            value={lfgForm.description}
-                            onChange={(e) => setLfgForm({...lfgForm, description: e.target.value})}
-                            placeholder="Describe your playstyle, what kind of teammates you're looking for, your communication style, or any specific requirements..."
-                            rows={4}
-                            className="w-full px-4 py-3 bg-valorant-dark border border-valorant-gray/20 rounded-lg text-white focus:border-valorant-red focus:ring-1 focus:ring-valorant-red transition-all resize-none"
-                          />
-                          <div className="flex items-center justify-between text-xs text-valorant-light/50 mt-2">
-                            <span>{lfgForm.description.length}/300</span>
-                            <span>{lfgForm.playstyle.length} playstyle selected</span>
-                          </div>
+                      {/* Player Preferences (Match Create Party Player Requirements style) */}
+                      <div className="bg-valorant-dark/30 rounded-xl p-5 md:p-6 border border-valorant-gray/20 space-y-5 md:space-y-6">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-white font-semibold text-base md:text-lg">Player Preferences</h3>
+                          <div className="h-px flex-1 ml-4 bg-valorant-gray/20" />
                         </div>
-
-                        {/* Tags Selector */}
-                        <div className="mt-6">
-                          <label className="block text-sm font-medium text-valorant-light mb-2">Player Preferences</label>
-                          <div className="flex flex-wrap gap-2">
+                        <div>
+                          <label className="block text-xs md:text-sm font-semibold text-white mb-2 md:mb-3">Preferences</label>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
                             {lfgTagOptions.map((t) => {
                               const active = lfgForm.tags.includes(t);
                               return (
@@ -1062,10 +1036,10 @@ export default function HomePage() {
                                       : [...lfgForm.tags, t];
                                     setLfgForm({ ...lfgForm, tags });
                                   }}
-                                  className={`px-3 py-1.5 rounded-lg border text-xs transition-all ${
+                                  className={`h-11 md:h-12 px-3 md:px-4 rounded-lg border text-xs md:text-sm transition-all ${
                                     active
                                       ? 'bg-valorant-red/20 border-valorant-red/50 text-white'
-                                      : 'bg-valorant-dark border-valorant-gray/30 text-valorant-light hover:bg-valorant-gray/20'
+                                      : 'bg-valorant-dark/50 border-valorant-gray/30 text-valorant-light hover:bg-valorant-gray/20'
                                   }`}
                                 >
                                   {t}
