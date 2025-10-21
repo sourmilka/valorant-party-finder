@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Eye } from 'lucide-react';
 import { PartyInvite } from '@/types';
-import { getRankImage, getAgentImage } from '@/lib/agentUtils';
+import { getAgentImage } from '@/lib/agentUtils';
 
 interface PartyCardProps {
   party: PartyInvite;
@@ -16,6 +16,12 @@ export default function PartyCard({ party, onCopy, copied }: PartyCardProps) {
   const isExpired = new Date() > new Date(party.expiresAt);
 
   const roleHasImage = (role: string) => ['Duelist','Initiator','Controller','Sentinel'].includes(role);
+  
+  // Simple rank image function
+  const getRankImage = (rank: string) => {
+    const rankName = rank.toLowerCase().replace(' ', '_');
+    return `/ranks/${rankName}.png`;
+  };
 
   const getTimeAgo = (d: Date | string) => {
     const ms = Date.now() - new Date(d).getTime();

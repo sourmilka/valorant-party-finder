@@ -42,7 +42,7 @@ export const agentRoles = {
 // Generate agents object from constants
 export const agents = ROLES.reduce((acc, role) => {
   if (role === 'Flexible') {
-    acc[role] = AGENTS; // Flexible can play any agent
+    acc[role] = [...AGENTS]; // Flexible can play any agent
   } else {
     acc[role] = AGENTS.filter(agent => AGENT_ROLES[agent] === role);
   }
@@ -92,7 +92,7 @@ export const getAgentsByRole = (role: string): string[] => {
 
 // Get all roles
 export const getAllRoles = (): string[] => {
-  return ROLES;
+  return [...ROLES];
 };
 
 // Get role info

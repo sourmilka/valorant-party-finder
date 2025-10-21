@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Users, Copy, ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 import { PARTY_SIZES, DURATION_OPTIONS, REQUIREMENT_TAGS, ROLES, AGENTS, AGENT_ROLES } from '@/lib/constants';
-import { getRankImage, getAgentImage, getAgentRole } from '@/lib/agentUtils';
+import { getAgentImage, getAgentRole } from '@/lib/agentUtils';
 
 interface CreatePartyFormProps {
   onSubmit: (formData: any) => Promise<void>;
@@ -371,7 +371,7 @@ export default function CreatePartyForm({ onSubmit, isCreating }: CreatePartyFor
           </label>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
             {REQUIREMENT_TAGS.map((tag) => {
-              const Icon = tag === 'Mic Required' ? Copy : tag === 'Good Comms' ? Copy : tag === 'Chill Vibes' ? Copy : Copy;
+              const Icon = Copy; // Use Copy icon for all tags
               const id = tag;
               const isSelected = partyForm.tags.includes(id);
               return (

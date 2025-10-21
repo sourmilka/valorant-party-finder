@@ -24,7 +24,6 @@ export interface PartyInvite {
   preferredRoles: string[];
   preferredAgents: string[];
   lookingForRoles: string[];
-  discordLink?: string;
   createdAt: Date;
   expiresAt: Date;
   views: number;
