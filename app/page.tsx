@@ -376,13 +376,12 @@ export default function HomePage() {
   // Common tag options for LFG (mirrors Create Party vibe)
   const lfgTagOptions: string[] = [...PREFERENCE_TAGS];
 
-  const isLfgFormValid = (
+  const isLfgFormValid = 
     riotName.trim().length > 0 &&
     riotTag.trim().length > 0 &&
     lfgForm.rank.trim().length > 0 &&
     lfgForm.server.trim().length > 0 &&
-    lfgForm.availability.trim().length > 0
-  );
+    lfgForm.availability.trim().length > 0;
 
   const handleLfgDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const next = e.target.value.slice(0, 300);
