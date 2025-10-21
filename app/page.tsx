@@ -460,7 +460,7 @@ export default function HomePage() {
 
               <div className="flex items-center space-x-3">
                 <button
-                  onClick={fetchRecentPosts}
+                  onClick={() => fetchRecentPosts()}
                   className="p-2 text-valorant-light/60 hover:text-white hover:bg-valorant-dark/30 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-valorant-red/50"
                   disabled={loading}
                 >
