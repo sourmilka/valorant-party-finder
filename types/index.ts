@@ -20,6 +20,7 @@ export interface PartyInvite {
   description: string;
   tags: string[];
   inGameName: string;
+  discordLink?: string;
   preferredRoles: string[];
   preferredAgents: string[];
   lookingForRoles: string[];

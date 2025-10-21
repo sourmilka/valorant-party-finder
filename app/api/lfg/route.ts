@@ -3,6 +3,7 @@ import connectDB from '@/lib/mongodb';
 import LFGRequest from '@/models/LFGRequest';
 import User from '@/models/User';
 import { getUserIdFromRequest } from '@/lib/auth';
+import { createLFGRateLimit, getClientIdentifier } from '@/lib/rateLimitPro';
 import mongoose from 'mongoose';
 
 export async function GET(request: NextRequest) {
@@ -77,16 +78,38 @@ export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
-    // Temporary: Allow posts without authentication for testing
-    const userId = getUserIdFromRequest(request) || new mongoose.Types.ObjectId().toString();
-    // if (!userId) {
-    //   return NextResponse.json(
-    //     { success: false, error: 'Authentication required' },
-    //     { status: 401 }
-    //   );
-    // }
+    // Require authentication for creating LFG requests
+    const userId = getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required. Please log in to create an LFG request.' },
+        { status: 401 }
+      );
+    }
 
     const { username, server, rank, playstyle, availability, description, tags, inGameName } = await request.json();
+
+    // Professional rate limiting for LFG creation
+    const identifier = getClientIdentifier(request, userId);
+    const rateLimitResult = await createLFGRateLimit.checkLimit(identifier);
+    
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Rate limit exceeded. Please wait before creating another LFG request.',
+          resetTime: rateLimitResult.resetTime
+        },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': '15',
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': rateLimitResult.resetTime.toISOString()
+          }
+        }
+      );
+    }
 
     // Validation
     const missing: string[] = [];

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import { verifyPassword, generateToken } from '@/lib/auth';
-import { rateLimit } from '@/lib/rateLimit';
+import { loginRateLimit, getClientIdentifier } from '@/lib/rateLimitPro';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,12 +10,25 @@ export async function POST(request: NextRequest) {
 
     const { email, password } = await request.json();
     
-    // Rate limiting
-    const clientIP = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
-    if (!rateLimit(`login:${clientIP}`)) {
+    // Professional rate limiting
+    const identifier = getClientIdentifier(request);
+    const rateLimitResult = await loginRateLimit.checkLimit(identifier);
+    
+    if (!rateLimitResult.allowed) {
       return NextResponse.json(
-        { success: false, error: 'Too many login attempts. Please try again later.' },
-        { status: 429 }
+        { 
+          success: false, 
+          error: 'Too many login attempts. Please try again later.',
+          resetTime: rateLimitResult.resetTime
+        },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': '5',
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': rateLimitResult.resetTime.toISOString()
+          }
+        }
       );
     }
 

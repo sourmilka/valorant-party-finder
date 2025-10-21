@@ -3,18 +3,8 @@ import connectDB from '@/lib/mongodb';
 import PartyInvite from '@/models/PartyInvite';
 import User from '@/models/User';
 import { getUserIdFromRequest } from '@/lib/auth';
+import { createPartyRateLimit, getClientIdentifier } from '@/lib/rateLimitPro';
 import mongoose from 'mongoose';
-
-// Simple per-identifier cooldown map (in-memory)
-const partyCreationTimestamps = new Map<string, number>();
-const COOLDOWN_MS = 60 * 1000; // 60 seconds between party creations per identifier
-
-function getClientIp(request: NextRequest): string {
-  const xff = request.headers.get('x-forwarded-for');
-  if (xff) return xff.split(',')[0].trim();
-  // @ts-ignore
-  return (request as any).ip || 'unknown';
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -90,14 +80,14 @@ export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
-    // Temporary: Allow posts without authentication for testing
-    const userId = getUserIdFromRequest(request) || new mongoose.Types.ObjectId().toString();
-    // if (!userId) {
-    //   return NextResponse.json(
-    //     { success: false, error: 'Authentication required' },
-    //     { status: 401 }
-    //   );
-    // }
+    // Require authentication for creating parties
+    const userId = getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required. Please log in to create a party.' },
+        { status: 401 }
+      );
+    }
 
     const body = await request.json();
     console.log('Party creation request body:', body);
@@ -132,21 +122,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Enforce cooldown per auth user or IP (prefer IP when unauthenticated)
-    const authUserId = getUserIdFromRequest(request);
-    const identifier = authUserId ? userId : getClientIp(request);
-    const lastTs = partyCreationTimestamps.get(identifier) || 0;
-    const now = Date.now();
-    const elapsed = now - lastTs;
-    if (elapsed < COOLDOWN_MS) {
-      const remaining = Math.ceil((COOLDOWN_MS - elapsed) / 1000);
+    // Professional rate limiting for party creation
+    const identifier = getClientIdentifier(request, userId);
+    const rateLimitResult = await createPartyRateLimit.checkLimit(identifier);
+    
+    if (!rateLimitResult.allowed) {
       return NextResponse.json(
-        { success: false, error: `Please wait ${remaining}s before creating another party.` },
-        { status: 429 }
+        { 
+          success: false, 
+          error: 'Rate limit exceeded. Please wait before creating another party.',
+          resetTime: rateLimitResult.resetTime
+        },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': '10',
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': rateLimitResult.resetTime.toISOString()
+          }
+        }
       );
     }
 
     // Server-controlled TTL: clamp duration between 5 and 120 minutes, default 30
+    const now = Date.now();
     const clampedMinutes = Math.max(5, Math.min(parseInt(durationMinutes || '30', 10) || 30, 120));
     const expiresAt = new Date(now + clampedMinutes * 60 * 1000);
 
@@ -175,11 +174,8 @@ export async function POST(request: NextRequest) {
     });
 
     await party.save();
-    // Skip populate for now since we're using temporary user IDs
-    // await party.populate('userId', 'riotId verified');
-
-    // record cooldown timestamp
-    partyCreationTimestamps.set(identifier, now);
+    // Populate user data for response
+    await party.populate('userId', 'riotId verified');
 
     return NextResponse.json({
       success: true,

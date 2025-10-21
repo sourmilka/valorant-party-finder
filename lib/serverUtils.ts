@@ -1,3 +1,5 @@
+import { SERVERS } from './constants';
+
 // Valorant server options organized by region
 export const serverOptions = {
   'North America (NA)': [
@@ -42,7 +44,7 @@ export const serverOptions = {
 };
 
 // Flatten all servers into a single array
-export const allServers = Object.values(serverOptions).flat();
+export const allServers = SERVERS;
 
 // Helper function to get region from server
 export const getRegionFromServer = (server: string): string => {
